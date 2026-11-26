@@ -39,5 +39,6 @@ npm run preview   # prova della build (service worker incluso)
 
 ## Pubblicazione
 
-Il workflow `.github/workflows/pages.yml` esegue i test, fa la build e pubblica su GitHub Pages
-(impostare in *Settings → Pages → Source: GitHub Actions*).
+Il repository è privato: l'app si pubblica con **Vercel** (piano gratuito), collegato al repository GitHub.
+Vercel riconosce Vite da solo (build `npm run build`, cartella `dist`) e ripubblica a ogni push.
+Il workflow `.github/workflows/ci.yml` esegue test e build a ogni push.
