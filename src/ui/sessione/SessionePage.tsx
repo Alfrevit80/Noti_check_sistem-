@@ -12,6 +12,7 @@ import { RiepilogoCavo, TabellaIsolamento, TabellaResistenzeTensioni } from './T
 import { EditorRiconoscimento } from './EditorRiconoscimento';
 import { passoDaRiprendere } from './GuidaPage';
 import { useSessione } from './useSessione';
+import { PannelloPol } from '../pol/PannelloPol';
 import type { Sessione } from '../../model/types';
 
 export function SessionePage() {
@@ -22,7 +23,7 @@ export function SessionePage() {
   if (ctx === null) return <NonTrovato cosa="Verifica" />;
   const { sessione: s, loop, centrale, impianto, impostazioni } = ctx;
   const soglie = impostazioni.soglie;
-  const anomalie = analizzaSessione(s, loop, soglie);
+  const anomalie = analizzaSessione(s, loop, soglie, impostazioni.sigle);
   const suggerito = esitoSuggerito(anomalie, s);
   const mancanti = misureMancanti(s);
 
@@ -109,6 +110,11 @@ export function SessionePage() {
           <TabellaResistenzeTensioni sessione={s} soglie={soglie} />
         </section>
       </div>
+
+      <section className="scheda">
+        <h2>Letture POL-200-TS</h2>
+        <PannelloPol s={s} loop={loop} sigle={impostazioni.sigle} soglie={soglie} conAnalisi={false} />
+      </section>
 
       <section className="scheda">
         <div className="titolo-riga">

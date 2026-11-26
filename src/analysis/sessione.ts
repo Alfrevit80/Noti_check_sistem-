@@ -6,6 +6,9 @@ import { analizzaResistenza } from './loopResistance';
 import { analizzaTensioni } from './voltages';
 import { analizzaRiconoscimento } from './riconoscimento';
 import { analizzaLinea } from './linea';
+import { analizzaLetture, confrontaConCentrale } from './pol';
+import { SIGLE_PREDEFINITE } from '../settings/defaults';
+import type { SiglaPol } from '../model/types';
 import { DEF_MISURE, TIPI_ISOLAMENTO, valoreUltima, type RamoMisura } from './misure';
 import type { TipoMisura } from '../model/types';
 
@@ -60,13 +63,15 @@ function confrontoSintomo(s: Sessione, soglie: Soglie): Anomalia[] {
   return out;
 }
 
-export function analizzaSessione(s: Sessione, loop: Loop, soglie: Soglie): Anomalia[] {
+export function analizzaSessione(s: Sessione, loop: Loop, soglie: Soglie, sigle: readonly SiglaPol[] = SIGLE_PREDEFINITE): Anomalia[] {
   return ordinaAnomalie([
     ...analizzaTensioni(s.misure, soglie),
     ...analizzaIsolamento(s.misure, soglie),
     ...analizzaResistenza(s.misure, s.cavo, soglie),
     ...analizzaLinea(s.misure, soglie),
     ...analizzaRiconoscimento(s.riconoscimenti, loop),
+    ...analizzaLetture(s.letture, loop, sigle, soglie),
+    ...confrontaConCentrale(s.letture, s.riconoscimenti),
     ...confrontoSintomo(s, soglie),
   ]);
 }

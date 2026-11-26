@@ -1,4 +1,4 @@
-import type { Impostazioni, Soglie, VoceChecklist } from '../model/types';
+import type { Impostazioni, SiglaPol, Soglie, VoceChecklist } from '../model/types';
 
 // Valori dal Manuale di installazione AM-8200N (M-173.2, cap. 9) e dal manuale del POL-200-TS.
 // Modificabili nelle Impostazioni.
@@ -49,6 +49,17 @@ export function aggiornaSoglie(salvate: Partial<Soglie> | undefined): Soglie {
   return s;
 }
 
+/** Sigle della griglia del POL-200-TS. Il significato di O e dei colori non è documentato: modificabili. */
+export const SIGLE_PREDEFINITE: SiglaPol[] = [
+  { codice: 'OT', famiglia: 'sensori', descrizione: 'Sensore ottico', puntoAllarme: true },
+  { codice: 'O', famiglia: 'sensori', descrizione: 'Sensore «O» (da verificare)', puntoAllarme: true },
+  { codice: 'ot', famiglia: 'sensori', descrizione: 'OT in minuscolo: risposta non corretta', puntoAllarme: true },
+  { codice: 'PI', famiglia: 'moduli', descrizione: 'Pulsante', puntoAllarme: true },
+  { codice: 'SS', famiglia: 'moduli', descrizione: 'Targa ottico-acustica / sirena', puntoAllarme: false },
+  { codice: '??', famiglia: 'entrambe', descrizione: 'Lettura incerta', puntoAllarme: true },
+  { codice: '-', famiglia: 'entrambe', descrizione: 'Indirizzo doppio (segnalato dal POL)', puntoAllarme: true },
+];
+
 export const IMPOSTAZIONI_PREDEFINITE: Impostazioni = {
   id: 'app',
   tecnicoPredefinito: '',
@@ -60,6 +71,7 @@ export const IMPOSTAZIONI_PREDEFINITE: Impostazioni = {
     'AM-8200': { loopBase: 2, loopMax: 4 },
   },
   modelliEspansione: ['LIB-8200N', 'LIB-8200'],
+  sigle: SIGLE_PREDEFINITE,
   soglie: SOGLIE_PREDEFINITE,
   claudeApiKey: '',
   claudeModello: 'claude-sonnet-5-5',

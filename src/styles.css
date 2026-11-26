@@ -292,3 +292,54 @@ button.link { background: none; border: 0; color: var(--link); text-decoration: 
 .atteso { background: var(--superficie); padding: 0.4rem 0.6rem; border-radius: 6px; }
 .stima { margin: 0.6rem 0; }
 .passo-scheda > .come-misurare { margin-bottom: 0.75rem; }
+
+/* ───── POL ───── */
+.griglia-pol-box { overflow-x: auto; margin: 0 -0.25rem; padding: 0 0.25rem; -webkit-overflow-scrolling: touch; }
+.griglia-pol { border-collapse: collapse; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; font-size: 0.82rem; min-width: 560px; width: 100%; table-layout: fixed; }
+.griglia-pol th { background: #8f9bb3; color: #fff; font-weight: 700; padding: 0.2rem 0; text-align: center; font-size: 0.78rem; }
+.griglia-pol thead th:first-child, .griglia-pol tbody th { width: 1.8rem; }
+.griglia-pol td { border: 1px solid #6b7280; background: #fbfaf5; text-align: center; height: 2rem; padding: 0; color: #1d2433; font-weight: 700; }
+.griglia-pol td.zero { background: #b9c1d1; }
+.griglia-pol td.fuori { background: #e5e7eb; }
+.griglia-pol td button, .griglia-pol td span { display: block; width: 100%; height: 100%; min-height: 2rem; border: 0; border-radius: 0; background: transparent; padding: 0; font: inherit; color: inherit; cursor: pointer; }
+.griglia-pol.modificabile td:hover { outline: 2px solid var(--link); outline-offset: -2px; }
+.griglia-pol .col-rosso { color: #c62828; } .griglia-pol .col-arancio { color: #d98a00; } .griglia-pol .col-nero { color: #111; }
+.st-soloA { background: #ffd8a8 !important; } .st-soloB { background: #a5d8ff !important; } .st-entrambi { background: #b2f2bb !important; }
+.st-doppio { background: #d0bfff !important; } .st-incerto { background: #ffec99 !important; } .st-presente { background: #b2f2bb !important; }
+.st-perso { background: #ffa8a8 !important; } .st-vuoto { background: transparent; }
+.griglia-pol td.evidenziata { outline: 3px solid #c62828; outline-offset: -3px; }
+
+.legenda-stati { list-style: none; display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; padding: 0; margin: 0.6rem 0 0; font-size: 0.85rem; }
+.legenda-stati li { display: flex; align-items: center; gap: 0.35rem; }
+.campione { width: 1rem; height: 1rem; border: 1px solid #6b7280; border-radius: 3px; display: inline-block; }
+
+.sequenza-box { display: flex; flex-direction: column; gap: 2px; overflow-x: auto; }
+.sequenza-riga { display: grid; grid-template-columns: repeat(20, minmax(26px, 1fr)); gap: 2px; min-width: 560px; }
+.seq { border: 1px solid #9ca3af; border-radius: 3px; min-height: 2.3rem; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; font-size: 0.72rem; font-weight: 700; color: #1d2433; background: #fbfaf5; }
+.seq small { font-weight: 400; color: #6b7280; font-size: 0.62rem; }
+.seq.st-vuoto { background: #e5e7eb; color: #9ca3af; }
+
+.tavolozza { position: sticky; bottom: 0; z-index: 5; background: var(--superficie); border-top: 1px solid var(--bordo); margin: 0.6rem -1rem -1rem; padding: 0.6rem 1rem calc(0.6rem + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 0.4rem; }
+.tavolozza-sigle, .tavolozza-colori { display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: center; }
+.tavolozza-sigle button { min-width: 52px; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; font-weight: 800; font-size: 1rem; }
+.tavolozza button.attiva { background: var(--primario); border-color: var(--primario); color: #fff; }
+.tavolozza .gomma { font-family: inherit !important; font-weight: 600 !important; font-size: 0.9rem !important; }
+.sigla-libera input { width: 5.5rem; min-height: 44px; }
+.tavolozza-colori button { min-height: 34px; padding: 0.2rem 0.6rem; font-size: 0.85rem; }
+.tavolozza-colori .col-rosso { color: #c62828; } .tavolozza-colori .col-arancio { color: #d98a00; }
+.riempi { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin-top: 1.2rem; }
+.riempi input { width: 4.5rem; }
+.istruzione-griglia { margin-top: 0; }
+
+.schede-famiglia { display: inline-flex; border: 1px solid var(--bordo); border-radius: 8px; overflow: hidden; margin-bottom: 0.6rem; }
+.schede-famiglia button { border: 0; border-radius: 0; min-width: 100px; }
+.schede-famiglia button + button { border-left: 1px solid var(--bordo); }
+.schede-famiglia button.attiva { background: var(--primario); color: #fff; font-weight: 600; }
+.conteggio { display: inline-block; min-width: 1.6rem; padding: 0 0.35rem; border-radius: 99px; background: #0002; font-size: 0.8rem; }
+.vista-pol { margin-top: 1rem; }
+.stato-loop { padding: 0.5rem 0.75rem; border-radius: 8px; font-weight: 600; margin: 0 0 0.6rem; }
+.stato-integro { background: var(--ok-sfondo); color: var(--ok); } .stato-interrotto { background: var(--err-sfondo); color: var(--err); } .stato-parziale { background: var(--att-sfondo); color: var(--att); }
+.nuove-letture { margin-bottom: 0.75rem; }
+.elenco-letture { margin-bottom: 0.5rem; }
+.confronto-box { margin-top: 1rem; }
+.confronto { margin-top: 0.6rem; }

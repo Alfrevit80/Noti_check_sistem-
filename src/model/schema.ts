@@ -75,6 +75,13 @@ const letturaSchema = z.object({
   origine: z.enum(['manuale', 'file', 'foto']).catch('manuale'),
   sensori: griglia,
   moduli: griglia,
+  colori: z
+    .object({
+      sensori: z.record(z.string(), z.enum(['rosso', 'arancio', 'nero'])).catch({}),
+      moduli: z.record(z.string(), z.enum(['rosso', 'arancio', 'nero'])).catch({}),
+    })
+    .optional()
+    .catch(undefined),
   vRitorno: optNum,
   mappatura: z
     .array(

@@ -6,6 +6,8 @@ import type { EsitoLoop, Loop } from '../../model/types';
 import { Briciole, Caricamento, NonTrovato } from '../components/Layout';
 import { CampoNumero, CampoScelta, CampoTesto } from '../components/Campi';
 import { ESITI_LOOP, formattaOra, testoEsito } from '../etichette';
+import { ConfrontoLetture } from '../pol/ConfrontoLetture';
+import { NOME_RAMO } from '../pol/LetturaPage';
 
 export function LoopPage() {
   const { id = '' } = useParams();
@@ -91,6 +93,18 @@ export function LoopPage() {
           </ul>
         )}
       </section>
+      {sessioni.flatMap((x) => x.letture).length > 1 && (
+        <section className="scheda">
+          <h2>Storico delle letture POL del loop</h2>
+          <p className="tenue">Confronta due letture qualsiasi, anche di verifiche diverse: cosa è comparso, sparito o cambiato.</p>
+          <ConfrontoLetture
+            letture={sessioni
+              .flatMap((x) => x.letture)
+              .sort((p, q) => (p.ora < q.ora ? 1 : -1))
+              .map((l) => ({ lettura: l, etichetta: `${formattaOra(l.ora)} — ${NOME_RAMO[l.ramo]}` }))}
+          />
+        </section>
+      )}
     </>
   );
 }

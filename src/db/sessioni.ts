@@ -2,7 +2,7 @@
 // alla cronologia (che finisce nel rapportino).
 import { db as dbApp, type NcsDB } from './db';
 import { adesso, nuovoId } from './repo';
-import type { Cavo, EsitoLoop, Evento, Misura, Riconoscimento, Sessione, Sintomo } from '../model/types';
+import type { Cavo, ColorePol, EsitoLoop, Evento, FamigliaPol, Griglia, LetturaPol, Misura, Riconoscimento, Sessione, Sintomo } from '../model/types';
 import { testoEventoMisura } from '../analysis/sessione';
 import { ESITI_LOOP } from '../ui/etichette';
 
@@ -130,3 +130,75 @@ export async function eliminaSessione(sessioneId: string, d: NcsDB = dbApp) {
 
 /** Cronologia ordinata per ora. */
 export const cronologia = (s: Pick<Sessione, 'eventi'>) => [...s.eventi].sort((a, b) => (a.ora < b.ora ? -1 : a.ora > b.ora ? 1 : 0));
+
+// ───────── Letture del POL-200-TS ─────────
+
+const NOME_RAMO_LETTURA: Record<LetturaPol['ramo'], string> = { A: 'lato A', B: 'lato B', chiuso: 'loop chiuso' };
+
+function testoEventoLettura(l: LetturaPol) {
+  const n = (g: Griglia) => Object.values(g).filter((x) => x !== '').length;
+  return `Lettura POL-200-TS ${NOME_RAMO_LETTURA[l.ramo]}: ${n(l.sensori)} sensori, ${n(l.moduli)} moduli`;
+}
+
+/** Nuova lettura; se `copiaDa` è indicato parte dalla griglia di quella lettura (per registrare solo le differenze). */
+export async function creaLettura(sessioneId: string, ramo: LetturaPol['ramo'], copiaDa?: LetturaPol, d: NcsDB = dbApp): Promise<string> {
+  const l: LetturaPol = {
+    id: nuovoId(),
+    ramo,
+    ora: adesso(),
+    origine: 'manuale',
+    sensori: copiaDa ? { ...copiaDa.sensori } : {},
+    moduli: copiaDa ? { ...copiaDa.moduli } : {},
+    colori: copiaDa?.colori ? { sensori: { ...copiaDa.colori.sensori }, moduli: { ...copiaDa.colori.moduli } } : undefined,
+    nota: '',
+  };
+  await modifica(sessioneId, d, (s) => ({ ...s, letture: [...s.letture, l], eventi: [...s.eventi, evento(testoEventoLettura(l), true, l.id, l.ora)] }));
+  return l.id;
+}
+
+function conLettura(s: Sessione, letturaId: string, fn: (l: LetturaPol) => LetturaPol): Sessione {
+  let nuova: LetturaPol | undefined;
+  const letture = s.letture.map((l) => (l.id === letturaId ? (nuova = fn(l)) : l));
+  if (!nuova) throw new Error('Lettura non trovata');
+  const ev = s.eventi.find((e) => e.rif === letturaId);
+  return {
+    ...s,
+    letture,
+    eventi: ev ? s.eventi.map((e) => (e.rif === letturaId ? { ...e, testo: testoEventoLettura(nuova!) } : e)) : s.eventi,
+  };
+}
+
+/** Imposta (o svuota con '') la sigla di una cella, ed eventualmente il colore. */
+export async function impostaCella(
+  sessioneId: string,
+  letturaId: string,
+  famiglia: FamigliaPol,
+  indirizzo: number,
+  sigla: string,
+  colore: ColorePol | null,
+  d: NcsDB = dbApp,
+) {
+  await modifica(sessioneId, d, (s) =>
+    conLettura(s, letturaId, (l) => {
+      const g = { ...l[famiglia] };
+      const colori = { sensori: { ...l.colori?.sensori }, moduli: { ...l.colori?.moduli } };
+      if (sigla) g[indirizzo] = sigla;
+      else delete g[indirizzo];
+      if (sigla && colore) colori[famiglia][indirizzo] = colore;
+      else delete colori[famiglia][indirizzo];
+      return { ...l, [famiglia]: g, colori };
+    }),
+  );
+}
+
+export async function aggiornaLettura(sessioneId: string, letturaId: string, patch: Partial<Pick<LetturaPol, 'nota' | 'ramo' | 'ora'>>, d: NcsDB = dbApp) {
+  await modifica(sessioneId, d, (s) => conLettura(s, letturaId, (l) => ({ ...l, ...patch })));
+}
+
+export async function eliminaLettura(sessioneId: string, letturaId: string, d: NcsDB = dbApp) {
+  await modifica(sessioneId, d, (s) => ({
+    ...s,
+    letture: s.letture.filter((l) => l.id !== letturaId),
+    eventi: s.eventi.filter((e) => e.rif !== letturaId),
+  }));
+}

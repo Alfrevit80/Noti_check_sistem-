@@ -126,7 +126,17 @@ export interface Cavo {
 /** Tipi di cella della griglia POL. '' = vuota (nessuna risposta). */
 export type TipoCella = 'OT' | 'O' | '??' | 'PI' | 'SS' | 'MM' | 'CM' | 'ISO' | string;
 
-export type Griglia = Record<number, TipoCella>; // indirizzo → tipo (le celle vuote non sono presenti)
+export type Griglia = Record<number, TipoCella>;
+export type ColorePol = 'rosso' | 'arancio' | 'nero';
+export type FamigliaPol = 'sensori' | 'moduli';
+
+/** Sigla mostrata dal POL-200-TS nella griglia (configurabile nelle Impostazioni). */
+export interface SiglaPol {
+  codice: string; // come appare sul POL, maiuscole/minuscole comprese
+  famiglia: FamigliaPol | 'entrambe';
+  descrizione: string;
+  puntoAllarme: boolean; // conta nei 32 punti (sensori e pulsanti)
+} // indirizzo → tipo (le celle vuote non sono presenti)
 
 export interface NodoMappatura {
   ordine: number; // posizione fisica lungo il ramo
@@ -143,6 +153,8 @@ export interface LetturaPol {
   origine: 'manuale' | 'file' | 'foto';
   sensori: Griglia;
   moduli: Griglia;
+  /** Colore della sigla sul display del POL (facoltativo: il significato non è documentato, salvo rosso = cambiato). */
+  colori?: { sensori: Record<number, ColorePol>; moduli: Record<number, ColorePol> };
   vRitorno?: number;
   mappatura?: NodoMappatura[];
   nomeFile?: string;
@@ -239,6 +251,7 @@ export interface Impostazioni {
   modelliCentrale: string[];
   profiliCentrale: Record<string, ProfiloCentrale>; // chiave = modello
   modelliEspansione: string[];
+  sigle: SiglaPol[];
   soglie: Soglie;
   claudeApiKey: string;
   claudeModello: string;

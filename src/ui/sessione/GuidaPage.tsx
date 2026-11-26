@@ -15,6 +15,7 @@ import { SequenzaMisure, type Domanda } from './SequenzaMisure';
 import { EditorRiconoscimento } from './EditorRiconoscimento';
 import { useSessione } from './useSessione';
 import { SuggerimentiPasso } from './ComeMisurare';
+import { PannelloPol } from '../pol/PannelloPol';
 import type { CtxSessione } from './useSessione';
 
 interface Passo {
@@ -173,11 +174,8 @@ function ContenutoPasso({ passo, ctx, q, onAvanti }: { passo: string; ctx: CtxSe
     case 'pol':
       return (
         <>
-        <SuggerimentiPasso passo="pol" />
-        <p className="attenzione-box">
-          Le griglie del POL-200-TS (lato A e lato B, sensori e moduli) e il confronto A/B arrivano nella <strong>fase 3</strong>.
-          Per ora puoi passare al passo successivo.
-        </p>
+          <SuggerimentiPasso passo="pol" />
+          <PannelloPol s={s} loop={ctx.loop} sigle={impostazioni.sigle} soglie={soglie} />
         </>
       );
     case 'ritorno':
@@ -344,7 +342,7 @@ function PassoCavo({ s, soglie }: { s: Sessione; soglie: Soglie }) {
 function PassoEsito({ ctx }: { ctx: CtxSessione }) {
   const { sessione: s, loop, impostazioni } = ctx;
   const nav = useNavigate();
-  const anomalie = analizzaSessione(s, loop, impostazioni.soglie);
+  const anomalie = analizzaSessione(s, loop, impostazioni.soglie, impostazioni.sigle);
   const suggerito = esitoSuggerito(anomalie, s);
   const [esito, setEsito] = useState(s.fine ? s.esito : suggerito);
   async function chiudi() {

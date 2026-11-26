@@ -11,6 +11,7 @@ import { LoopPage } from './ui/pages/LoopPage';
 import { ImpostazioniPage } from './ui/pages/ImpostazioniPage';
 import { SessionePage } from './ui/sessione/SessionePage';
 import { GuidaPage } from './ui/sessione/GuidaPage';
+import { LetturaPage } from './ui/pol/LetturaPage';
 import { Accesso } from './ui/Accesso';
 import './styles.css';
 
@@ -31,6 +32,7 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/loop/:id" element={<LoopPage />} />
           <Route path="/sessione/:id" element={<SessionePage />} />
           <Route path="/sessione/:id/guida/:passo" element={<GuidaPage />} />
+          <Route path="/sessione/:id/lettura/:lid" element={<LetturaPage />} />
           <Route path="/impostazioni" element={<ImpostazioniPage />} />
           <Route path="*" element={<ImpiantiPage />} />
         </Routes>

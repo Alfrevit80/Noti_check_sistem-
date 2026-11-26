@@ -70,3 +70,27 @@ describe('sessione di verifica', () => {
     expect((await d.loops.get(lid))!.esito).toBe('ok_con_riserva');
   });
 });
+
+describe('letture POL', () => {
+  it('crea, modifica celle (con colore), aggiorna l\'evento, copia da una lettura precedente', async () => {
+    const { creaLettura, impostaCella, eliminaLettura } = await import('../src/db/sessioni');
+    const id = await creaLettura(sid, 'A', undefined, d);
+    await impostaCella(sid, id, 'sensori', 1, 'OT', null, d);
+    await impostaCella(sid, id, 'sensori', 2, '??', 'rosso', d);
+    await impostaCella(sid, id, 'moduli', 7, 'PI', null, d);
+    await impostaCella(sid, id, 'sensori', 1, '', null, d);
+    let s = (await d.sessioni.get(sid))!;
+    const l = s.letture[0];
+    expect(l.sensori).toEqual({ 2: '??' });
+    expect(l.colori!.sensori).toEqual({ 2: 'rosso' });
+    expect(s.eventi.map((e) => e.testo)).toEqual(['Lettura POL-200-TS lato A: 1 sensori, 1 moduli']);
+
+    const id2 = await creaLettura(sid, 'chiuso', l, d);
+    s = (await d.sessioni.get(sid))!;
+    expect(s.letture.find((x) => x.id === id2)!.sensori).toEqual({ 2: '??' });
+    await eliminaLettura(sid, id, d);
+    s = (await d.sessioni.get(sid))!;
+    expect(s.letture).toHaveLength(1);
+    expect(s.eventi).toHaveLength(1);
+  });
+});

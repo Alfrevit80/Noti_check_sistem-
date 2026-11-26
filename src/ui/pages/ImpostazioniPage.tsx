@@ -4,7 +4,8 @@ import { cambiaPassword, impostaBloccoMinuti, leggiCassaforte } from '../../secu
 import { CampoPassword, bloccaApp } from '../Accesso';
 import { leggiImpostazioni, salvaImpostazioni } from '../../db/repo';
 import type { ProfiloCentrale, RigaSezione } from '../../model/types';
-import { SOGLIE_PREDEFINITE } from '../../settings/defaults';
+import { SIGLE_PREDEFINITE, SOGLIE_PREDEFINITE } from '../../settings/defaults';
+import type { SiglaPol } from '../../model/types';
 import { CampoNumero, CampoTesto } from '../components/Campi';
 import { Caricamento } from '../components/Layout';
 
@@ -84,6 +85,8 @@ export function ImpostazioniPage() {
           </table>
         </div>
       </section>
+
+      <EditorSigle />
 
       <section className="scheda">
         <div className="titolo-riga">
@@ -294,5 +297,78 @@ function CoppiaNumeri(props: { etichetta: string; unita: string; valore: [number
         <CampoNumero etichetta="" valore={b} unita={props.unita} onSalva={(v) => v !== undefined && props.onSalva([a, v])} />
       </div>
     </div>
+  );
+}
+
+function EditorSigle() {
+  const imp = useLiveQuery(() => leggiImpostazioni(), []);
+  const [nuova, setNuova] = useState('');
+  if (!imp) return null;
+  const sigle = imp.sigle;
+  const salva = (v: SiglaPol[]) => salvaImpostazioni({ sigle: v });
+  const set = (i: number, patch: Partial<SiglaPol>) => salva(sigle.map((x, j) => (j === i ? { ...x, ...patch } : x)));
+  return (
+    <section className="scheda">
+      <div className="titolo-riga">
+        <h2>Sigle del POL-200-TS</h2>
+        <button onClick={() => confirm('Ripristinare le sigle predefinite?') && salva(SIGLE_PREDEFINITE)}>Ripristina predefinite</button>
+      </div>
+      <p className="tenue">
+        Le sigle che compaiono nella tavolozza della griglia. «Punto di allarme» = conta nei 32 punti ammessi senza ridondanza (sensori e
+        pulsanti). Maiuscole e minuscole sono distinte: il minuscolo viene comunque segnalato come risposta non corretta.
+      </p>
+      <div className="scorrimento-x">
+        <table className="tabella">
+          <thead>
+            <tr>
+              <th>Sigla</th>
+              <th>Griglia</th>
+              <th>Descrizione</th>
+              <th>Punto di allarme</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
+            {sigle.map((x, i) => (
+              <tr key={x.codice + i}>
+                <td>
+                  <strong>{x.codice}</strong>
+                </td>
+                <td>
+                  <select value={x.famiglia} onChange={(e) => set(i, { famiglia: e.target.value as SiglaPol['famiglia'] })} aria-label="Griglia">
+                    <option value="sensori">Sensori</option>
+                    <option value="moduli">Moduli</option>
+                    <option value="entrambe">Entrambe</option>
+                  </select>
+                </td>
+                <td>
+                  <CampoTesto etichetta="" valore={x.descrizione} onSalva={(v) => set(i, { descrizione: v })} />
+                </td>
+                <td>
+                  <input type="checkbox" checked={x.puntoAllarme} onChange={(e) => set(i, { puntoAllarme: e.target.checked })} aria-label="Punto di allarme" />
+                </td>
+                <td>
+                  <button className="piccolo" onClick={() => salva(sigle.filter((_, j) => j !== i))} aria-label="Rimuovi sigla">
+                    ✕
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <form
+        className="aggiungi-voce"
+        onSubmit={(e) => {
+          e.preventDefault();
+          const c = nuova.trim();
+          if (c && !sigle.some((x) => x.codice === c)) salva([...sigle, { codice: c, famiglia: 'sensori', descrizione: '', puntoAllarme: true }]);
+          setNuova('');
+        }}
+      >
+        <input value={nuova} onChange={(e) => setNuova(e.target.value)} placeholder="Nuova sigla (es. H, SM, ISO)" maxLength={4} />
+        <button type="submit">Aggiungi</button>
+      </form>
+    </section>
   );
 }
