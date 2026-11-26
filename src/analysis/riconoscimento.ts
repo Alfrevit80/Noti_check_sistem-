@@ -36,7 +36,7 @@ export function analizzaRiconoscimento(rr: readonly Riconoscimento[], loop: Pick
         codice: `RIC_NUOVI_${tipo}`,
         gravita: 'media',
         titolo: `${x.nuo} ${tipo} nuovi da programmare (NUO)`,
-        spiegazione: 'Dispositivi rilevati ma non ancora in archivio: vanno salvati e programmati.',
+        spiegazione: 'Nuovi dispositivi trovati dall\'auto-riconoscimento, non ancora in archivio: vanno salvati e programmati.',
         doveIntervenire: ['Salvare il riconoscimento e completare la programmazione (zone, descrizioni, logiche).', 'Verificare che non siano indirizzi doppi o impostati per errore.'],
       });
     }
@@ -44,9 +44,14 @@ export function analizzaRiconoscimento(rr: readonly Riconoscimento[], loop: Pick
       out.push({
         codice: `RIC_INC_${tipo}`,
         gravita: 'media',
-        titolo: `${x.inc} ${tipo} con INC diverso da zero`,
-        spiegazione: 'Dispositivi rilevati con dati diversi da quelli in archivio (ad esempio tipo diverso da quello programmato).',
-        doveIntervenire: ['Verificare tipo e indirizzo dei dispositivi segnalati e aggiornare la programmazione.'],
+        titolo: `${x.inc} ${tipo} incoerenti con la programmazione (INC)`,
+        spiegazione:
+          'Dispositivi programmati in precedenza ma non coerenti con quanto rilevato dall\'auto-riconoscimento, ad esempio un sensore programmato come PHOT e rilevato come THER.',
+        doveIntervenire: [
+          'Individuare gli indirizzi interessati e verificare il dispositivo realmente installato.',
+          'Se il dispositivo installato è sbagliato sostituirlo; se è corretto aggiornare la programmazione (tipo, zona, logiche).',
+          'Controllare che non ci siano indirizzi doppi (due dispositivi di tipo diverso con lo stesso indirizzo).',
+        ],
       });
     }
   }

@@ -53,9 +53,10 @@ describe('riconoscimento automatico', () => {
   });
 
   it('mancanti, nuovi e INC', () => {
-    const r = analizzaRiconoscimento([ric([{ tipoDispositivo: 'Sensori', nuo: 2, inc: 1, tot: 40, man: 3 }])], loop());
-    expect(codici(r)).toEqual(['RIC_MANCANTI_Sensori', 'RIC_NUOVI_Sensori', 'RIC_INC_Sensori']);
+    const r = analizzaRiconoscimento([ric([{ tipoDispositivo: 'NFX(I)-OPT', nuo: 2, inc: 1, tot: 40, man: 3 }])], loop());
+    expect(codici(r)).toEqual(['RIC_MANCANTI_NFX(I)-OPT', 'RIC_NUOVI_NFX(I)-OPT', 'RIC_INC_NFX(I)-OPT']);
     expect(r[0].gravita).toBe('alta');
+    expect(r[2].spiegazione).toMatch(/PHOT.*THER/);
   });
 
   it('totale diverso da quello atteso del loop', () => {

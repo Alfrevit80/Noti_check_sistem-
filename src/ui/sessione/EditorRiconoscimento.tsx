@@ -5,10 +5,10 @@ import { eliminaRiconoscimento, salvaRiconoscimento } from '../../db/sessioni';
 import { totaliRiconoscimento } from '../../analysis/riconoscimento';
 import { formattaOra } from '../etichette';
 
-const RIGHE_INIZIALI: RigaRiconoscimento[] = [
-  { tipoDispositivo: 'Sensori', nuo: 0, inc: 0, tot: 0, man: 0 },
-  { tipoDispositivo: 'Moduli', nuo: 0, inc: 0, tot: 0, man: 0 },
-];
+const RIGHE_INIZIALI: RigaRiconoscimento[] = [{ tipoDispositivo: '', nuo: 0, inc: 0, tot: 0, man: 0 }];
+
+/** Tipi HW come compaiono nel sommario dell'AM-8200N (suggerimenti, si può scrivere qualsiasi tipo). */
+export const TIPI_HW_SUGGERITI = ['NFX(I)-OPT', 'NFX(I)-SMT2', 'NFX(I)-SMT3', 'NFX(I)-TFIX58', 'NFX(I)-TFIX78', 'NFX(I)-TDIFF', 'IRX-751CTEM'];
 const COLONNE = ['nuo', 'inc', 'tot', 'man'] as const;
 
 export function EditorRiconoscimento({ sessione }: { sessione: Sessione }) {
@@ -18,8 +18,9 @@ export function EditorRiconoscimento({ sessione }: { sessione: Sessione }) {
   return (
     <>
       <p className="tenue">
-        Dopo l'autoapprendimento la centrale mostra per ogni tipo di dispositivo: NUO (nuovi, da salvare e programmare), INC, TOT
-        (totale rilevato) e MAN (programmati ma mancanti). Ricopia qui i valori.
+        Al termine dell'auto-riconoscimento il display mostra il sommario per tipo di dispositivo: NUO (nuovi dispositivi trovati),
+        INC (programmati in precedenza ma non coerenti con quanto rilevato, es. PHOT rilevato come THER), TOT (totale) e MAN
+        (programmati ma mancanti). Ricopia qui i valori, una riga per tipo.
       </p>
       {modifica !== null && (
         <Modulo
@@ -30,6 +31,7 @@ export function EditorRiconoscimento({ sessione }: { sessione: Sessione }) {
             setModifica(null);
           }}
           onAnnulla={ordinati.length ? () => setModifica(null) : undefined}
+          tipiUsati={sessione.riconoscimenti.flatMap((r) => r.righe.map((x) => x.tipoDispositivo)).filter(Boolean)}
         />
       )}
       {ordinati.map((r) => {
@@ -93,6 +95,7 @@ function Modulo(props: {
   iniziale?: { righe: RigaRiconoscimento[]; nota: string };
   onSalva: (righe: RigaRiconoscimento[], nota: string) => Promise<void>;
   onAnnulla?: () => void;
+  tipiUsati: string[];
 }) {
   const [righe, setRighe] = useState<RigaRiconoscimento[]>(props.iniziale?.righe ?? RIGHE_INIZIALI);
   const [nota, setNota] = useState(props.iniziale?.nota ?? '');
@@ -115,7 +118,13 @@ function Modulo(props: {
             {righe.map((r, i) => (
               <tr key={i}>
                 <td>
-                  <input value={r.tipoDispositivo} onChange={(e) => set(i, { tipoDispositivo: e.target.value })} aria-label="Tipo dispositivo" />
+                  <input
+                    value={r.tipoDispositivo}
+                    list="tipi-hw"
+                    placeholder="es. NFX(I)-OPT"
+                    onChange={(e) => set(i, { tipoDispositivo: e.target.value })}
+                    aria-label="Tipo dispositivo"
+                  />
                 </td>
                 {COLONNE.map((c) => (
                   <td key={c}>
@@ -138,6 +147,11 @@ function Modulo(props: {
           </tbody>
         </table>
       </div>
+      <datalist id="tipi-hw">
+        {[...new Set([...props.tipiUsati, ...TIPI_HW_SUGGERITI])].map((t) => (
+          <option key={t} value={t} />
+        ))}
+      </datalist>
       <button className="piccolo" onClick={() => setRighe([...righe, { tipoDispositivo: '', nuo: 0, inc: 0, tot: 0, man: 0 }])}>
         + Riga
       </button>
