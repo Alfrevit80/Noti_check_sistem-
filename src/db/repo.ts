@@ -2,7 +2,7 @@
 // (predefinito: quello dell'app) così i test possono usarne uno separato.
 import { db as dbApp, type NcsDB } from './db';
 import type { Centrale, Impianto, Impostazioni, Loop, Rete, Sessione } from '../model/types';
-import { IMPOSTAZIONI_PREDEFINITE, SOGLIE_PREDEFINITE, nuovaChecklistRete } from '../settings/defaults';
+import { IMPOSTAZIONI_PREDEFINITE, aggiornaSoglie, nuovaChecklistRete } from '../settings/defaults';
 
 export function nuovoId(): string {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID();
@@ -20,7 +20,7 @@ export async function leggiImpostazioni(d: NcsDB = dbApp): Promise<Impostazioni>
   return {
     ...IMPOSTAZIONI_PREDEFINITE,
     ...s,
-    soglie: { ...SOGLIE_PREDEFINITE, ...s?.soglie },
+    soglie: aggiornaSoglie(s?.soglie),
     profiliCentrale: { ...IMPOSTAZIONI_PREDEFINITE.profiliCentrale, ...s?.profiliCentrale },
     id: 'app',
   };

@@ -3,8 +3,11 @@ import type { Cavo, Misura, RigaSezione, Soglie } from '../model/types';
 import type { Anomalia } from './findings';
 import { formattaValore, valoreUltima } from './misure';
 
-/** Resistività del rame a 20 °C (Ω·mm²/m). */
-export const RHO_RAME = 0.0175;
+/**
+ * Resistività di riferimento del conduttore (Ω·mm²/m). 0,0195 riproduce la tabella dei valori approssimativi
+ * del manuale POL-200-TS (1,5 mm²: 13 Ω/km; 2,5 mm²: 8 Ω/km).
+ */
+export const RHO_RAME = 0.0195;
 
 /** Resistenza attesa di un conduttore lungo L metri con sezione S mm². */
 export const resistenzaConduttore = (lunghezzaM: number, sezioneMm2: number) => (RHO_RAME * lunghezzaM) / sezioneMm2;
@@ -56,6 +59,17 @@ export function analizzaResistenza(misure: readonly Misura[], cavo: Cavo, s: Sog
   const p = typeof rP === 'number' ? rP : undefined;
   const n = typeof rN === 'number' ? rN : undefined;
 
+  // Il manuale misura solo il negativo: totale = 2 × negativo
+  if (p === undefined && rP !== 'OL' && n !== undefined && 2 * n > s.rLoopMaxOhm) {
+    out.push({
+      codice: 'RES_TOTALE_ALTA',
+      gravita: 'alta',
+      titolo: `Resistenza di loop troppo alta: circa ${ohm(2 * n)} (massimo ${s.rLoopMaxOhm} Ω)`,
+      spiegazione: `Stimata come 2 × negativo (${ohm(n)}), come indicato dal manuale di installazione.`,
+      doveIntervenire: ['Verificare la sezione del cavo rispetto alla lunghezza.', 'Controllare giunzioni e morsetti.'],
+    });
+  }
+
   if (p !== undefined && n !== undefined) {
     const tot = p + n;
     if (tot > s.rLoopMaxOhm) {
@@ -93,6 +107,30 @@ export function analizzaResistenza(misure: readonly Misura[], cavo: Cavo, s: Sog
     });
   }
 
+  // ── continuità dello schermo ──
+  const rC = valoreUltima(misure, 'loop', 'rC');
+  if (rC === 'OL') {
+    out.push({
+      codice: 'RES_CALZA_INTERROTTA',
+      gravita: 'alta',
+      titolo: 'Schermo interrotto tra A e B',
+      spiegazione: 'La calza deve essere continua lungo tutta la linea (e collegata a terra solo in centrale).',
+      doveIntervenire: ['Controllare la giunzione della calza in ogni base e scatola di derivazione.'],
+    });
+  } else if (typeof rC === 'number' && n !== undefined && n > 0) {
+    const r = rC / n;
+    const [min, max] = s.calzaSuNegativo;
+    if (r < min * 0.75 || r > max * 1.34) {
+      out.push({
+        codice: 'RES_CALZA_ANOMALA',
+        gravita: 'bassa',
+        titolo: `Resistenza della calza ${ohm(rC)}: ${r.toFixed(1).replace('.', ',')} volte il negativo`,
+        spiegazione: `Secondo il manuale del POL-200-TS la calza misura circa ${min}–${max} volte il negativo. ${r > max ? 'Un valore più alto indica giunzioni della calza resistive o difettose.' : 'Un valore più basso può indicare un collegamento della calza con altre masse o un percorso diverso.'}`,
+        doveIntervenire: ['Controllare le giunzioni della calza nelle basi e nelle scatole.'],
+      });
+    }
+  }
+
   // ── confronto con il cavo ──
   const L = cavo.lunghezzaM;
   const S = cavo.sezioneMm2;
@@ -119,7 +157,15 @@ export function analizzaResistenza(misure: readonly Misura[], cavo: Cavo, s: Sog
       }
     }
     const min = sezioneMinima(L, s.tabellaSezioni);
-    if (min === null) {
+    if (L > s.lunghezzaMaxM) {
+      out.push({
+        codice: 'CAVO_TROPPO_LUNGO',
+        gravita: 'alta',
+        titolo: `Loop di ${L} m: oltre il massimo di ${s.lunghezzaMaxM} m`,
+        spiegazione: 'La lunghezza totale del loop (dai morsetti di uscita a quelli di ingresso in centrale) non deve superare il massimo indicato dal manuale.',
+        doveIntervenire: ['Dividere il loop.'],
+      });
+    } else if (min === null) {
       out.push({
         codice: 'CAVO_OLTRE_TABELLA',
         gravita: 'media',

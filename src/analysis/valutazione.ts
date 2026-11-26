@@ -23,6 +23,18 @@ export function valutaMisura(tipo: TipoMisura, v: ValoreMisura, s: Soglie): Valu
       const limite = tipo === 'rN' ? s.rNegMaxOhm : s.rLoopMaxOhm / 2;
       return v > limite ? 'basso' : v > limite * 0.9 ? 'attenzione' : 'ok';
     }
+    case 'pN':
+    case 'nP': {
+      if (v === 'OL') return 'attenzione';
+      const [min, max] = tipo === 'pN' ? s.lineaPN : s.lineaNP;
+      return v < min * 0.5 ? 'basso' : v < min || v > max ? 'attenzione' : 'ok';
+    }
+    case 'rC':
+      return v === 'OL' ? 'basso' : 'ok';
+    case 'cap':
+      return num(v) > s.capacitaMaxUF ? 'attenzione' : 'ok';
+    case 'vLin':
+      return num(v) < s.vLineaMinV ? 'basso' : 'ok';
     case 'vRes':
       return Math.abs(num(v)) > s.vResiduaMaxV ? 'basso' : 'ok';
     case 'vRit':
@@ -38,6 +50,11 @@ export const TESTO_VALUTAZIONE: Record<TipoMisura, Record<Valutazione, string>> 
   nC: { ok: 'Nessun contatto con lo schermo', attenzione: 'Valore non infinito: possibile contatto con lo schermo', basso: 'Contatto con lo schermo' },
   rP: { ok: 'Nei limiti', attenzione: 'Vicino al limite', basso: 'Fuori limite o conduttore interrotto' },
   rN: { ok: 'Nei limiti', attenzione: 'Vicino al limite', basso: 'Fuori limite o conduttore interrotto' },
+  pN: { ok: 'Nei valori del manuale', attenzione: 'Fuori dai valori del manuale', basso: 'Molto basso: possibile corto o polarità invertita' },
+  nP: { ok: 'Nei valori del manuale', attenzione: 'Fuori dai valori del manuale', basso: 'Molto basso: possibile corto o polarità invertita' },
+  rC: { ok: 'Schermo continuo', attenzione: '', basso: 'Schermo interrotto' },
+  cap: { ok: 'Capacità nei limiti', attenzione: 'Capacità oltre 0,5 μF', basso: '' },
+  vLin: { ok: 'Tensione di linea corretta', attenzione: '', basso: 'Sotto 14 V: possibile inversione dei collegamenti' },
   vRes: { ok: 'Linea scarica', attenzione: '', basso: 'Linea carica: scaricarla prima delle misure in Ω' },
   vRit: { ok: 'Tensione di ritorno sufficiente', attenzione: '', basso: 'Tensione di ritorno bassa: resistenza di linea troppo alta' },
 };

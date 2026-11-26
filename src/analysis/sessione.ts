@@ -5,6 +5,7 @@ import { analizzaIsolamento, valutaIsolamento } from './insulation';
 import { analizzaResistenza } from './loopResistance';
 import { analizzaTensioni } from './voltages';
 import { analizzaRiconoscimento } from './riconoscimento';
+import { analizzaLinea } from './linea';
 import { DEF_MISURE, TIPI_ISOLAMENTO, valoreUltima, type RamoMisura } from './misure';
 import type { TipoMisura } from '../model/types';
 
@@ -64,6 +65,7 @@ export function analizzaSessione(s: Sessione, loop: Loop, soglie: Soglie): Anoma
     ...analizzaTensioni(s.misure, soglie),
     ...analizzaIsolamento(s.misure, soglie),
     ...analizzaResistenza(s.misure, s.cavo, soglie),
+    ...analizzaLinea(s.misure, soglie),
     ...analizzaRiconoscimento(s.riconoscimenti, loop),
     ...confrontoSintomo(s, soglie),
   ]);

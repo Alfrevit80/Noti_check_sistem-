@@ -3,8 +3,9 @@ import { analizzaIsolamento, valutaIsolamento } from '../src/analysis/insulation
 import { S, codici, iso, m } from './fixtures';
 
 describe('valutaIsolamento', () => {
-  it('soglie: <1 MΩ basso, <20 attenzione, OL ok', () => {
+  it('soglie del manuale: <2 MΩ basso, <20 attenzione (richiesti 15÷20 MΩ), OL ok', () => {
     expect(valutaIsolamento(0.2, S)).toBe('basso');
+    expect(valutaIsolamento(1.5, S)).toBe('basso');
     expect(valutaIsolamento(5, S)).toBe('attenzione');
     expect(valutaIsolamento(20, S)).toBe('ok');
     expect(valutaIsolamento('OL', S)).toBe('ok');

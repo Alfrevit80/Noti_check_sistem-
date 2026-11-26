@@ -51,7 +51,10 @@ export function analizzaIsolamentoRamo(misure: readonly Misura[], ramo: Ramo, s:
       gravita: 'alta',
       titolo: `Dispersione verso terra sul negativo (${R}): ${fmt(v.nT!)}`,
       spiegazione: `Valore basso solo sul −${v.pT !== undefined ? ` (+ / terra: ${fmt(v.pT)})` : ''}: il conduttore guasto è il negativo.`,
-      doveIntervenire: PASSI_RICERCA_TERRA,
+      doveIntervenire: [
+        ...PASSI_RICERCA_TERRA,
+        'Verificare se sulla linea ci sono barriere Zener: collegano il negativo del loop a terra per progetto (in quel caso in centrale va rimosso il ponticello JDSPE).',
+      ],
     });
   } else if (sp === 'basso' && sn === 'basso') {
     const p = num(v.pT!);

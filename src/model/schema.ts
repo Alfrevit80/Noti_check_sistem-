@@ -111,7 +111,7 @@ export const sessioneSchema = z.object({
       z.object({
         id: z.string(),
         ramo: z.enum(['A', 'B', 'loop']),
-        tipo: z.enum(['pT', 'nT', 'cT', 'pC', 'nC', 'rP', 'rN', 'vRes', 'vRit']),
+        tipo: z.enum(['pT', 'nT', 'cT', 'pC', 'nC', 'pN', 'nP', 'rP', 'rN', 'rC', 'cap', 'vRes', 'vRit', 'vLin']),
         valore,
         ora: str,
         nota: str,

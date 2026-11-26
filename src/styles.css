@@ -279,3 +279,5 @@ button.link { background: none; border: 0; color: var(--link); text-decoration: 
 .tabella-input td:first-child input { min-width: 8rem; text-align: left; }
 .testo-lungo { white-space: pre-wrap; }
 .bottone.primario-link { background: var(--primario); border-color: var(--primario); color: #fff; font-weight: 600; }
+.coppia { display: flex; align-items: center; gap: 0.4rem; }
+.coppia .campo { flex: 1; }

@@ -7,7 +7,7 @@ export interface DefMisura {
   tipo: TipoMisura;
   etichetta: string; // breve, per le tabelle
   descrizione: string; // per la procedura guidata
-  unita: 'MΩ' | 'Ω' | 'V';
+  unita: 'MΩ' | 'Ω' | 'V' | 'μF';
   consentiOL: boolean;
   rami: RamoMisura[];
   istruzioni: string;
@@ -44,6 +44,16 @@ export const DEF_MISURE: Record<TipoMisura, DefMisura> = {
     consentiOL: true, rami: ['A', 'B'],
     istruzioni: 'Un puntale sul − del ramo, l\'altro sulla calza.',
   },
+  pN: {
+    tipo: 'pN', etichetta: '+ / − (tester + su +)', descrizione: 'Linea + / − con dispositivi, tester + sul +', unita: 'MΩ',
+    consentiOL: true, rami: ['A', 'B'],
+    istruzioni: 'Con sensori e moduli installati: tester (+) sul + della linea, tester (−) sul −. Manuale: 1 ÷ 1,3 MΩ.',
+  },
+  nP: {
+    tipo: 'nP', etichetta: '+ / − (tester + su −)', descrizione: 'Linea + / − con dispositivi, puntali invertiti', unita: 'MΩ',
+    consentiOL: true, rami: ['A', 'B'],
+    istruzioni: 'Puntali invertiti: tester (+) sul − della linea, tester (−) sul +. Manuale: 0,7 ÷ 0,9 MΩ.',
+  },
   rP: {
     tipo: 'rP', etichetta: 'A+ → B+', descrizione: 'Resistenza del positivo da A a B', unita: 'Ω',
     consentiOL: true, rami: ['loop'],
@@ -54,6 +64,21 @@ export const DEF_MISURE: Record<TipoMisura, DefMisura> = {
     consentiOL: true, rami: ['loop'],
     istruzioni: 'Ohmmetro tra il − del ramo A e il − del ramo B (entrambi scollegati dalla centrale).',
   },
+  rC: {
+    tipo: 'rC', etichetta: 'Calza A → B', descrizione: 'Resistenza della calza da A a B', unita: 'Ω',
+    consentiOL: true, rami: ['loop'],
+    istruzioni: 'Ohmmetro tra la calza del ramo A e la calza del ramo B. Deve essere continua: circa 2–3 volte la resistenza del negativo.',
+  },
+  cap: {
+    tipo: 'cap', etichetta: 'Capacità + / −', descrizione: 'Capacità tra + e − del loop', unita: 'μF',
+    consentiOL: false, rami: ['loop'],
+    istruzioni: 'Multimetro del POL-200-TS (o capacimetro) tra + e −. Massimo ammesso 0,5 μF (500 nF).',
+  },
+  vLin: {
+    tipo: 'vLin', etichetta: 'Tensione di linea', descrizione: 'Tensione di linea con centrale alimentata', unita: 'V',
+    consentiOL: false, rami: ['loop'],
+    istruzioni: 'Loop ricollegato e centrale alimentata, nessun punto programmato: la tensione deve essere 24 Vcc.',
+  },
   vRit: {
     tipo: 'vRit', etichetta: 'Tensione di ritorno (POL)', descrizione: 'Tensione di ritorno letta sul POL-200-TS', unita: 'V',
     consentiOL: false, rami: ['loop'],
@@ -62,7 +87,8 @@ export const DEF_MISURE: Record<TipoMisura, DefMisura> = {
 };
 
 export const TIPI_ISOLAMENTO: TipoMisura[] = ['pT', 'nT', 'cT', 'pC', 'nC'];
-export const TIPI_OHM: TipoMisura[] = ['pT', 'nT', 'cT', 'pC', 'nC', 'rP', 'rN'];
+export const TIPI_LINEA: TipoMisura[] = ['pN', 'nP'];
+export const TIPI_OHM: TipoMisura[] = ['pT', 'nT', 'cT', 'pC', 'nC', 'pN', 'nP', 'rP', 'rN', 'rC'];
 
 /** Ultima misura registrata (per ora) di un tipo su un ramo. */
 export function ultimaMisura(misure: readonly Misura[], ramo: RamoMisura, tipo: TipoMisura): Misura | undefined {

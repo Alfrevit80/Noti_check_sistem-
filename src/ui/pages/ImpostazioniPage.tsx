@@ -3,7 +3,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { cambiaPassword, impostaBloccoMinuti, leggiCassaforte } from '../../security/sessione';
 import { CampoPassword, bloccaApp } from '../Accesso';
 import { leggiImpostazioni, salvaImpostazioni } from '../../db/repo';
-import type { ProfiloCentrale, RigaSezione, Soglie } from '../../model/types';
+import type { ProfiloCentrale, RigaSezione } from '../../model/types';
 import { SOGLIE_PREDEFINITE } from '../../settings/defaults';
 import { CampoNumero, CampoTesto } from '../components/Campi';
 import { Caricamento } from '../components/Layout';
@@ -21,7 +21,7 @@ export function ImpostazioniPage() {
   }, []);
 
   if (!s) return <Caricamento />;
-  const setSoglia = (k: keyof Omit<Soglie, 'tabellaSezioni'>) => (v: number | undefined) =>
+  const setSoglia = (k: 'isolamentoMinMOhm' | 'isolamentoAttenzioneMOhm' | 'rLoopMaxOhm' | 'rNegMaxOhm' | 'vRitornoMinV' | 'vResiduaMaxV' | 'maxDispositiviLoopAperto' | 'lunghezzaMaxM' | 'capacitaMaxUF' | 'vLineaMinV') => (v: number | undefined) =>
     salvaImpostazioni({ soglie: { ...s.soglie, [k]: v ?? SOGLIE_PREDEFINITE[k] } });
   const setRiga = (i: number, patch: Partial<RigaSezione>) =>
     salvaImpostazioni({ soglie: { ...s.soglie, tabellaSezioni: s.soglie.tabellaSezioni.map((r, j) => (j === i ? { ...r, ...patch } : r)) } });
@@ -92,7 +92,7 @@ export function ImpostazioniPage() {
             Ripristina predefinite
           </button>
         </div>
-        <p className="tenue">Valori di riferimento del manuale AM-8200. Verifica sempre con la documentazione della centrale installata.</p>
+        <p className="tenue">Valori dal manuale di installazione AM-8200N (cap. 9) e dal manuale del POL-200-TS.</p>
         <div className="griglia-campi">
           <CampoNumero etichetta="Isolamento minimo (dispersione sotto)" unita="MΩ" valore={s.soglie.isolamentoMinMOhm} onSalva={setSoglia('isolamentoMinMOhm')} />
           <CampoNumero etichetta="Isolamento di attenzione" unita="MΩ" valore={s.soglie.isolamentoAttenzioneMOhm} onSalva={setSoglia('isolamentoAttenzioneMOhm')} />
@@ -101,6 +101,12 @@ export function ImpostazioniPage() {
           <CampoNumero etichetta="Tensione di ritorno minima" unita="V" valore={s.soglie.vRitornoMinV} onSalva={setSoglia('vRitornoMinV')} />
           <CampoNumero etichetta="Tensione residua massima per misure in Ω" unita="V" valore={s.soglie.vResiduaMaxV} onSalva={setSoglia('vResiduaMaxV')} />
           <CampoNumero etichetta="Dispositivi massimi con loop aperto" intero valore={s.soglie.maxDispositiviLoopAperto} onSalva={setSoglia('maxDispositiviLoopAperto')} />
+          <CampoNumero etichetta="Lunghezza massima del loop" unita="m" valore={s.soglie.lunghezzaMaxM} onSalva={setSoglia('lunghezzaMaxM')} />
+          <CampoNumero etichetta="Capacità massima + / −" unita="μF" valore={s.soglie.capacitaMaxUF} onSalva={setSoglia('capacitaMaxUF')} />
+          <CampoNumero etichetta="Tensione di linea minima" unita="V" valore={s.soglie.vLineaMinV} onSalva={setSoglia('vLineaMinV')} aiuto="Sotto: inversione dei collegamenti" />
+          <CoppiaNumeri etichetta="+ / − con dispositivi, tester + sul +" unita="MΩ" valore={s.soglie.lineaPN} onSalva={(v) => salvaImpostazioni({ soglie: { ...s.soglie, lineaPN: v } })} />
+          <CoppiaNumeri etichetta="+ / − con dispositivi, puntali invertiti" unita="MΩ" valore={s.soglie.lineaNP} onSalva={(v) => salvaImpostazioni({ soglie: { ...s.soglie, lineaNP: v } })} />
+          <CoppiaNumeri etichetta="Resistenza calza / negativo" unita="×" valore={s.soglie.calzaSuNegativo} onSalva={(v) => salvaImpostazioni({ soglie: { ...s.soglie, calzaSuNegativo: v } })} />
         </div>
         <h3>Sezione minima del cavo in funzione della lunghezza</h3>
         <table className="tabella">
@@ -274,5 +280,19 @@ function Sicurezza() {
         </div>
       </form>
     </section>
+  );
+}
+
+function CoppiaNumeri(props: { etichetta: string; unita: string; valore: [number, number]; onSalva: (v: [number, number]) => void }) {
+  const [a, b] = props.valore;
+  return (
+    <div className="campo">
+      <span className="campo-etichetta">{props.etichetta}</span>
+      <div className="coppia">
+        <CampoNumero etichetta="" valore={a} onSalva={(v) => v !== undefined && props.onSalva([v, b])} />
+        <span>÷</span>
+        <CampoNumero etichetta="" valore={b} unita={props.unita} onSalva={(v) => v !== undefined && props.onSalva([a, v])} />
+      </div>
+    </div>
   );
 }

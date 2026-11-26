@@ -98,7 +98,12 @@ export interface Sintomo {
  *  resistenza:  rP = A+→B+, rN = A−→B−
  *  tensioni:    vRes = residua tra + e −, vRit = ritorno letta sul POL-200-TS
  */
-export type TipoMisura = 'pT' | 'nT' | 'cT' | 'pC' | 'nC' | 'rP' | 'rN' | 'vRes' | 'vRit';
+export type TipoMisura =
+  | 'pT' | 'nT' | 'cT' | 'pC' | 'nC' // isolamento
+  | 'pN' | 'nP' // + / − con dispositivi collegati (tester + su +, poi invertito)
+  | 'rP' | 'rN' | 'rC' // resistenza A→B di +, − e calza
+  | 'cap' // capacità + / −
+  | 'vRes' | 'vRit' | 'vLin'; // tensioni: residua, ritorno (POL), di linea (centrale alimentata)
 
 /** Valore numerico oppure 'OL' (fuori scala = isolato / infinito). */
 export type ValoreMisura = number | 'OL';
@@ -212,6 +217,13 @@ export interface Soglie {
   vResiduaMaxV: number; // sopra = scaricare la linea prima di misurare in Ω
   maxDispositiviLoopAperto: number; // 32
   tabellaSezioni: RigaSezione[];
+  lunghezzaMaxM: number; // 3000 m
+  capacitaMaxUF: number; // 0,5 μF
+  vLineaMinV: number; // sotto: inversione dei collegamenti (14 V)
+  lineaPN: [number, number]; // MΩ, tester + su + (1 ÷ 1,3)
+  lineaNP: [number, number]; // MΩ, tester + su − (0,7 ÷ 0,9)
+  calzaSuNegativo: [number, number]; // rapporto resistenza calza / negativo (circa 2 ÷ 3)
+  versione?: number; // versione dei valori predefiniti (per aggiornare quelli non modificati)
 }
 
 /** Configurazione tipica di un modello di centrale (per i valori predefiniti e i controlli). */

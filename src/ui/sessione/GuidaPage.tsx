@@ -26,16 +26,21 @@ const tutte = (s: Sessione, dd: Domanda[]) => dd.every((d) => ultimaMisura(s.mis
 const DOM_RESIDUA: Domanda[] = [{ ramo: 'A', tipo: 'vRes' }, { ramo: 'B', tipo: 'vRes' }];
 const domIso = (r: 'A' | 'B'): Domanda[] => TIPI_ISOLAMENTO.map((tipo) => ({ ramo: r, tipo }));
 const DOM_RES: Domanda[] = [{ ramo: 'loop', tipo: 'rP' }, { ramo: 'loop', tipo: 'rN' }];
+const DOM_RES_CALZA: Domanda[] = [...DOM_RES, { ramo: 'loop', tipo: 'rC' }];
+const DOM_LINEA: Domanda[] = (['A', 'B'] as const).flatMap((ramo) => [{ ramo, tipo: 'pN' as const }, { ramo, tipo: 'nP' as const }]);
+const DOM_MULTIMETRO: Domanda[] = [{ ramo: 'loop', tipo: 'cap' }, { ramo: 'loop', tipo: 'vRit' }];
 
 export const PASSI: Passo[] = [
   { id: 'sintomo', titolo: 'Sintomo', completo: (s) => !!s.sintomo },
   { id: 'scollegamento', titolo: 'Scollegamento', completo: (s) => tutte(s, DOM_RESIDUA) },
   { id: 'isoA', titolo: 'Isolamento A', completo: (s) => tutte(s, domIso('A')) },
   { id: 'isoB', titolo: 'Isolamento B', completo: (s) => tutte(s, domIso('B')) },
+  { id: 'linea', titolo: 'Linea + / −', completo: (s) => tutte(s, DOM_LINEA.filter((d) => d.ramo === 'A')) },
   { id: 'resistenza', titolo: 'Resistenza', completo: (s) => tutte(s, DOM_RES) },
   { id: 'cavo', titolo: 'Cavo', completo: (s) => !!(s.cavo.lunghezzaM && s.cavo.sezioneMm2) },
   { id: 'pol', titolo: 'Letture POL', completo: (s) => s.letture.length > 0 },
-  { id: 'ritorno', titolo: 'Tensione ritorno', completo: (s) => !!ultimaMisura(s.misure, 'loop', 'vRit') },
+  { id: 'ritorno', titolo: 'Multimetro POL', completo: (s) => tutte(s, DOM_MULTIMETRO) },
+  { id: 'ricollegamento', titolo: 'Ricollegamento', completo: (s) => !!ultimaMisura(s.misure, 'loop', 'vLin') },
   { id: 'riconoscimento', titolo: 'Riconoscimento', completo: (s) => s.riconoscimenti.length > 0 },
   { id: 'esito', titolo: 'Esito', completo: (s) => !!s.fine },
 ];
@@ -128,15 +133,28 @@ function ContenutoPasso({ passo, ctx, q, onAvanti }: { passo: string; ctx: CtxSe
         </>
       );
     }
+    case 'linea':
+      return (
+        <>
+          <p className="tenue">
+            Con sensori e moduli installati, misura tra + e − di ogni ramo nei due versi (manuale di installazione, «Isolamento
+            della linea»): {String(soglie.lineaPN[0]).replace('.', ',')} ÷ {String(soglie.lineaPN[1]).replace('.', ',')} MΩ con il
+            tester + sul +, {String(soglie.lineaNP[0]).replace('.', ',')} ÷ {String(soglie.lineaNP[1]).replace('.', ',')} MΩ
+            invertendo i puntali. Con il loop chiuso basta il ramo A.
+          </p>
+          <AvvisoScarica s={s} soglie={soglie} />
+          <SequenzaMisure sessioneId={s.id} misure={s.misure} domande={DOM_LINEA} soglie={soglie} iniziale={q} onCompletata={onAvanti} />
+        </>
+      );
     case 'resistenza':
       return (
         <>
           <p className="tenue">
             Con i due rami scollegati dalla centrale si misura la continuità del loop da un capo all'altro. Limiti: totale ≤{' '}
-            {soglie.rLoopMaxOhm} Ω, negativo ≤ {soglie.rNegMaxOhm} Ω.
+            {soglie.rLoopMaxOhm} Ω, negativo ≤ {soglie.rNegMaxOhm} Ω (il totale è circa 2 × negativo). La calza deve essere continua.
           </p>
           <AvvisoScarica s={s} soglie={soglie} />
-          <SequenzaMisure sessioneId={s.id} misure={s.misure} domande={DOM_RES} soglie={soglie} iniziale={q} onCompletata={onAvanti} />
+          <SequenzaMisure sessioneId={s.id} misure={s.misure} domande={DOM_RES_CALZA} soglie={soglie} iniziale={q} onCompletata={onAvanti} />
         </>
       );
     case 'cavo':
@@ -151,8 +169,21 @@ function ContenutoPasso({ passo, ctx, q, onAvanti }: { passo: string; ctx: CtxSe
     case 'ritorno':
       return (
         <>
-          <p className="tenue">Facoltativo: tensione di ritorno indicata dal POL-200-TS. Sotto {soglie.vRitornoMinV} V la resistenza di linea è troppo alta.</p>
-          <SequenzaMisure sessioneId={s.id} misure={s.misure} domande={[{ ramo: 'loop', tipo: 'vRit' }]} soglie={soglie} iniziale={q} onCompletata={onAvanti} />
+          <p className="tenue">
+            Valori del multimetro del POL-200-TS: capacità tra + e − (massimo {String(soglie.capacitaMaxUF).replace('.', ',')} μF) e
+            tensione di ritorno (sotto {soglie.vRitornoMinV} V la resistenza del loop è troppo alta).
+          </p>
+          <SequenzaMisure sessioneId={s.id} misure={s.misure} domande={DOM_MULTIMETRO} soglie={soglie} iniziale={q} onCompletata={onAvanti} />
+        </>
+      );
+    case 'ricollegamento':
+      return (
+        <>
+          <ol className="istruzioni">
+            <li>Ricollegare il loop (ramo A e B) e la calza in centrale.</li>
+            <li>Alimentare la centrale e misurare la tensione in uscita della linea (nessun punto programmato): deve essere 24 Vcc.</li>
+          </ol>
+          <SequenzaMisure sessioneId={s.id} misure={s.misure} domande={[{ ramo: 'loop', tipo: 'vLin' }]} soglie={soglie} iniziale={q} onCompletata={onAvanti} />
         </>
       );
     case 'riconoscimento':

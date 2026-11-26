@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import type { Misura, Sessione, Soglie, TipoMisura } from '../../model/types';
-import { DEF_MISURE, TIPI_ISOLAMENTO, formattaValore, ultimaMisura, type RamoMisura } from '../../analysis/misure';
+import { DEF_MISURE, TIPI_ISOLAMENTO, TIPI_LINEA, formattaValore, ultimaMisura, type RamoMisura } from '../../analysis/misure';
 import { valutaMisura } from '../../analysis/valutazione';
 import { lunghezzaMassima, resistenzaConduttore, sezioneMinima } from '../../analysis/loopResistance';
 import { formattaOra } from '../etichette';
@@ -25,17 +25,24 @@ export function TabellaIsolamento({ sessione, soglie }: { sessione: Sessione; so
       <table className="tabella tabella-misure">
         <thead>
           <tr>
-            <th>Isolamento (MΩ)</th>
+            <th>Misura (MΩ)</th>
             <th>Ramo A</th>
             <th>Ramo B</th>
           </tr>
         </thead>
         <tbody>
-          {TIPI_ISOLAMENTO.map((t) => (
+          {[...TIPI_ISOLAMENTO, ...TIPI_LINEA].map((t) => (
             <tr key={t}>
               <th scope="row">{DEF_MISURE[t].etichetta}</th>
               {(['A', 'B'] as const).map((r) => (
-                <CellaMisura key={r} misure={sessione.misure} ramo={r} tipo={t} soglie={soglie} link={`/sessione/${sessione.id}/guida/iso${r}?q=${t}`} />
+                <CellaMisura
+                  key={r}
+                  misure={sessione.misure}
+                  ramo={r}
+                  tipo={t}
+                  soglie={soglie}
+                  link={TIPI_LINEA.includes(t) ? `/sessione/${sessione.id}/guida/linea?q=${t}-${r}` : `/sessione/${sessione.id}/guida/iso${r}?q=${t}`}
+                />
               ))}
             </tr>
           ))}
@@ -48,7 +55,8 @@ export function TabellaIsolamento({ sessione, soglie }: { sessione: Sessione; so
 export function TabellaResistenzeTensioni({ sessione, soglie }: { sessione: Sessione; soglie: Soglie }) {
   const rP = ultimaMisura(sessione.misure, 'loop', 'rP')?.valore;
   const rN = ultimaMisura(sessione.misure, 'loop', 'rN')?.valore;
-  const tot = typeof rP === 'number' && typeof rN === 'number' ? Math.round((rP + rN) * 100) / 100 : undefined;
+  const tot =
+    typeof rP === 'number' && typeof rN === 'number' ? Math.round((rP + rN) * 100) / 100 : rP === undefined && typeof rN === 'number' ? 2 * rN : undefined;
   const g = (passo: string, q: string) => `/sessione/${sessione.id}/guida/${passo}?q=${q}`;
   return (
     <div className="scorrimento-x">
@@ -87,6 +95,23 @@ export function TabellaResistenzeTensioni({ sessione, soglie }: { sessione: Sess
               <span className="valore">{tot === undefined ? '—' : formattaValore(tot, 'Ω')}</span>
             </td>
             <td className="tenue">≤ {soglie.rLoopMaxOhm} Ω</td>
+          </tr>
+          <tr>
+            <th scope="row">Resistenza calza A → B</th>
+            <CellaMisura misure={sessione.misure} ramo="loop" tipo="rC" soglie={soglie} link={g('resistenza', 'rC')} />
+            <td className="tenue">
+              ≈ {soglie.calzaSuNegativo[0]}–{soglie.calzaSuNegativo[1]} × negativo
+            </td>
+          </tr>
+          <tr>
+            <th scope="row">Capacità + / −</th>
+            <CellaMisura misure={sessione.misure} ramo="loop" tipo="cap" soglie={soglie} link={g('ritorno', 'cap')} />
+            <td className="tenue">≤ {String(soglie.capacitaMaxUF).replace('.', ',')} μF</td>
+          </tr>
+          <tr>
+            <th scope="row">Tensione di linea (centrale alimentata)</th>
+            <CellaMisura misure={sessione.misure} ramo="loop" tipo="vLin" soglie={soglie} link={g('ricollegamento', 'vLin')} />
+            <td className="tenue">24 V (min {soglie.vLineaMinV} V)</td>
           </tr>
           <tr>
             <th scope="row">Tensione di ritorno (POL)</th>
