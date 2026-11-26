@@ -15,6 +15,8 @@ import { ConfrontoLetture } from './ConfrontoLetture';
 import { ImportaMnt } from './ImportaMnt';
 import { VistaMappatura } from './VistaMappatura';
 import { analizzaFileLetture } from '../../analysis/mappa';
+import { analizzaRegistri } from '../../analysis/registro';
+import { VistaRegistro } from './VistaRegistro';
 
 const STATI_AB: StatoCella[] = ['soloA', 'soloB', 'entrambi', 'doppio', 'incerto'];
 const STATI_CHIUSO: StatoCella[] = ['presente', 'perso', 'incerto'];
@@ -52,6 +54,14 @@ export function PannelloPol({ s, loop, sigle, soglie, conAnalisi = true }: { s: 
         <button onClick={() => nuova('chiuso')}>+ Lettura a loop chiuso</button>
       </div>
       <ImportaMnt sessioneId={s.id} />
+      {(s.registri ?? []).length > 0 && (
+        <div className="registri">
+          <h3>Registri nel tempo</h3>
+          {(s.registri ?? []).map((r) => (
+            <VistaRegistro key={r.id} r={r} sessioneId={s.id} />
+          ))}
+        </div>
+      )}
 
       {ordinate.length > 0 && (
         <ul className="elenco elenco-letture">
@@ -127,7 +137,7 @@ export function PannelloPol({ s, loop, sigle, soglie, conAnalisi = true }: { s: 
       {conAnalisi && ordinate.length > 0 && (
         <>
           <h3>Analisi delle letture</h3>
-          <ElencoAnomalie anomalie={ordinaAnomalie([...analizzaLetture(s.letture, loop, sigle, soglie), ...confrontaConCentrale(s.letture, s.riconoscimenti), ...analizzaFileLetture(s.letture, sigle, soglie)])} />
+          <ElencoAnomalie anomalie={ordinaAnomalie([...analizzaLetture(s.letture, loop, sigle, soglie), ...confrontaConCentrale(s.letture, s.riconoscimenti), ...analizzaFileLetture(s.letture, sigle, soglie), ...analizzaRegistri(s.registri, s.letture)])} />
         </>
       )}
 

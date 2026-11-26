@@ -148,6 +148,31 @@ export const sessioneSchema = z.object({
     .catch([]),
   cavo: z.object({ lunghezzaM: optNum, sezioneMm2: optNum, tipo: str }).catch({ tipo: '' }),
   letture: z.array(letturaSchema).catch([]),
+  registri: z
+    .array(
+      z.object({
+        id: z.string(),
+        ramo: z.enum(['A', 'B', 'chiuso']).catch('A'),
+        nomeFile: str,
+        importato: str,
+        campioni: z
+          .array(
+            z.object({
+              ora: str,
+              famiglia: z.enum(['sensori', 'moduli']),
+              indirizzo: z.number(),
+              risponde: z.boolean(),
+              pw: z.array(z.number()).catch([]),
+              corrente: optNum,
+              correnteIniziale: optNum,
+              sta: z.string().optional(),
+            }),
+          )
+          .catch([]),
+      }),
+    )
+    .optional()
+    .catch(undefined),
   riconoscimenti: z
     .array(
       z.object({

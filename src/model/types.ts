@@ -181,6 +181,26 @@ export interface LetturaPol {
   nota: string;
 }
 
+/** Un campione del registro nel tempo (.DAT) del POL-200-TS. */
+export interface CampioneDat {
+  ora: string; // ISO
+  famiglia: FamigliaPol;
+  indirizzo: number;
+  risponde: boolean; // false = "-" (nessuna risposta)
+  pw: number[];
+  corrente?: number;
+  correnteIniziale?: number;
+  sta?: string;
+}
+
+export interface RegistroPol {
+  id: Id;
+  ramo: Ramo | 'chiuso';
+  nomeFile: string;
+  importato: string;
+  campioni: CampioneDat[];
+}
+
 export interface RigaRiconoscimento {
   tipoDispositivo: string; // es. "Sensori ottici", "Moduli"
   nuo: number;
@@ -216,6 +236,7 @@ export interface Sessione {
   misure: Misura[];
   cavo: Cavo;
   letture: LetturaPol[];
+  registri?: RegistroPol[];
   riconoscimenti: Riconoscimento[];
   eventi: Evento[];
   esito: EsitoLoop;

@@ -2,7 +2,7 @@
 // alla cronologia (che finisce nel rapportino).
 import { db as dbApp, type NcsDB } from './db';
 import { adesso, nuovoId } from './repo';
-import type { Cavo, ColorePol, EsitoLoop, Evento, FamigliaPol, Griglia, LetturaPol, Misura, Riconoscimento, Sessione, Sintomo } from '../model/types';
+import type { RegistroPol, Cavo, ColorePol, EsitoLoop, Evento, FamigliaPol, Griglia, LetturaPol, Misura, Riconoscimento, Sessione, Sintomo } from '../model/types';
 import { testoEventoMisura } from '../analysis/sessione';
 import { ESITI_LOOP } from '../ui/etichette';
 
@@ -207,4 +207,21 @@ export async function eliminaLettura(sessioneId: string, letturaId: string, d: N
 export async function aggiungiLettura(sessioneId: string, l: LetturaPol, d: NcsDB = dbApp) {
   const testo = l.nomeFile ? `${testoEventoLettura(l)} (importata da ${l.nomeFile})` : testoEventoLettura(l);
   await modifica(sessioneId, d, (s) => ({ ...s, letture: [...s.letture, l], eventi: [...s.eventi, evento(testo, true, l.id, l.ora)] }));
+}
+
+// ───────── Registri nel tempo (.DAT) ─────────
+
+export async function aggiungiRegistro(sessioneId: string, r: RegistroPol, d: NcsDB = dbApp) {
+  const ore = r.campioni.map((c) => c.ora).sort();
+  const hh = (s?: string) => (s ? s.slice(11, 16) : '');
+  const testo = `Registro POL-200-TS ${NOME_RAMO_LETTURA[r.ramo]} (${r.nomeFile}): ${r.campioni.length} campioni${ore.length ? `, dalle ${hh(ore[0])} alle ${hh(ore[ore.length - 1])}` : ''}`;
+  await modifica(sessioneId, d, (s) => ({
+    ...s,
+    registri: [...(s.registri ?? []), r],
+    eventi: [...s.eventi, evento(testo, true, r.id, ore[0] && !Number.isNaN(Date.parse(ore[0])) ? new Date(ore[0]).toISOString() : r.importato)],
+  }));
+}
+
+export async function eliminaRegistro(sessioneId: string, id: string, d: NcsDB = dbApp) {
+  await modifica(sessioneId, d, (s) => ({ ...s, registri: (s.registri ?? []).filter((r) => r.id !== id), eventi: s.eventi.filter((e) => e.rif !== id) }));
 }

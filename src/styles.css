@@ -363,3 +363,6 @@ button.link { background: none; border: 0; color: var(--link); text-decoration: 
 .riga-corrotta td { background: var(--att-sfondo); }
 .importa-mnt { margin-bottom: 0.75rem; }
 .file-mnt { border-bottom: 1px solid var(--bordo); padding-bottom: 0.5rem; margin-bottom: 0.5rem; }
+.registri { margin-bottom: 0.75rem; }
+.registro { border: 1px solid var(--bordo); border-radius: 8px; padding: 0.5rem 0.75rem; margin-bottom: 0.5rem; }
+.registro summary { cursor: pointer; }

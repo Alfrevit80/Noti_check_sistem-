@@ -8,6 +8,7 @@ import { analizzaRiconoscimento } from './riconoscimento';
 import { analizzaLinea } from './linea';
 import { analizzaLetture, confrontaConCentrale } from './pol';
 import { analizzaFileLetture } from './mappa';
+import { analizzaRegistri } from './registro';
 import { SIGLE_PREDEFINITE } from '../settings/defaults';
 import type { SiglaPol } from '../model/types';
 import { DEF_MISURE, TIPI_ISOLAMENTO, valoreUltima, type RamoMisura } from './misure';
@@ -74,6 +75,7 @@ export function analizzaSessione(s: Sessione, loop: Loop, soglie: Soglie, sigle:
     ...analizzaLetture(s.letture, loop, sigle, soglie),
     ...confrontaConCentrale(s.letture, s.riconoscimenti),
     ...analizzaFileLetture(s.letture, sigle, soglie),
+    ...analizzaRegistri(s.registri, s.letture),
     ...confrontoSintomo(s, soglie),
   ]);
 }
