@@ -39,6 +39,6 @@ npm run preview   # prova della build (service worker incluso)
 
 ## Pubblicazione
 
-Il repository è privato: l'app si pubblica con **Vercel** (piano gratuito), collegato al repository GitHub.
-Vercel riconosce Vite da solo (build `npm run build`, cartella `dist`) e ripubblica a ogni push.
-Il workflow `.github/workflows/ci.yml` esegue test e build a ogni push.
+Il workflow `.github/workflows/ci.yml` esegue test e build a ogni push; dal branch `main`
+pubblica anche su GitHub Pages: https://alfrevit80.github.io/Noti_check_sistem-/
+(in *Settings → Pages → Source* deve essere selezionato *GitHub Actions*).
