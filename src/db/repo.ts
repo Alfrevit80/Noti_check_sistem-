@@ -208,12 +208,16 @@ export async function salvaRete(rete: Rete, d: NcsDB = dbApp) {
 
 export async function creaSessione(loopId: string, d: NcsDB = dbApp): Promise<Sessione> {
   const imp = await leggiImpostazioni(d);
+  // tecnico: quello indicato nell'impianto, altrimenti quello predefinito
+  const loop = await d.loops.get(loopId);
+  const centrale = loop ? await d.centrali.get(loop.centraleId) : undefined;
+  const impianto = centrale ? await d.impianti.get(centrale.impiantoId) : undefined;
   const s: Sessione = {
     id: nuovoId(),
     loopId,
     inizio: adesso(),
     strumento: imp.strumentoPredefinito,
-    tecnico: imp.tecnicoPredefinito,
+    tecnico: impianto?.tecnico || imp.tecnicoPredefinito,
     misure: [],
     cavo: { tipo: '' },
     letture: [],

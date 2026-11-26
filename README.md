@@ -44,7 +44,7 @@ npm run preview   # prova della build (service worker incluso)
 ## Stato delle fasi
 
 1. ✅ Struttura, modello dati, anagrafica impianto e centrali, rete tra centrali, export/import, PWA
-2. ⏳ Procedura guidata del loop e tabelle misure
+2. ✅ Procedura guidata del loop, tabelle misure, regole su isolamento, resistenza, tensioni, cavo, riconoscimento
 3. ⏳ Griglie POL e analisi lato A / lato B
 4. ⏳ Import file POL-200-TS (.MNT, log)
 5. ⏳ Rapportino PDF

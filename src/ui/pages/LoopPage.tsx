@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { db } from '../../db/db';
-import { aggiornaLoop } from '../../db/repo';
+import { aggiornaLoop, creaSessione } from '../../db/repo';
 import type { EsitoLoop, Loop } from '../../model/types';
 import { Briciole, Caricamento, NonTrovato } from '../components/Layout';
 import { CampoNumero, CampoScelta, CampoTesto } from '../components/Campi';
@@ -9,6 +9,7 @@ import { ESITI_LOOP, formattaOra, testoEsito } from '../etichette';
 
 export function LoopPage() {
   const { id = '' } = useParams();
+  const nav = useNavigate();
   const loop = useLiveQuery(() => db.loops.get(id).then((x) => x ?? null), [id]);
   const centrale = useLiveQuery(async () => (loop ? (await db.centrali.get(loop.centraleId)) ?? null : null), [loop?.centraleId]);
   const impianto = useLiveQuery(async () => (centrale ? (await db.impianti.get(centrale.impiantoId)) ?? null : null), [centrale?.impiantoId]);
@@ -45,23 +46,33 @@ export function LoopPage() {
       </section>
 
       <section className="scheda">
-        <h2>Verifiche</h2>
-        <p className="attenzione-box">
-          La procedura guidata (sintomo, misure di isolamento e resistenza, letture POL lato A e B, riconoscimento
-          automatico) arriva nella <strong>fase 2</strong>.
-        </p>
-        {sessioni.length > 0 && (
+        <div className="titolo-riga">
+          <h2>Verifiche</h2>
+          <button
+            className="primario"
+            onClick={async () => {
+              const s = await creaSessione(id);
+              nav(`/sessione/${s.id}/guida/sintomo`);
+            }}
+          >
+            + Nuova verifica
+          </button>
+        </div>
+        {sessioni.length === 0 ? (
+          <p className="tenue">Nessuna verifica. Avvia la procedura guidata con «Nuova verifica».</p>
+        ) : (
           <ul className="elenco">
             {sessioni.map((s) => (
               <li key={s.id}>
-                <div className="voce">
+                <Link to={`/sessione/${s.id}`} className="voce">
                   <span className="voce-titolo">
-                    {formattaOra(s.inizio)} <span className={`badge esito-${s.esito}`}>{testoEsito(s.esito)}</span>
+                    {formattaOra(s.inizio)}
+                    <span className={`badge esito-${s.esito}`}>{s.fine ? testoEsito(s.esito) : 'In corso'}</span>
                   </span>
                   <span className="voce-dettagli">
                     {s.misure.length} misure · {s.letture.length} letture POL · {s.tecnico || 'tecnico n.d.'}
                   </span>
-                </div>
+                </Link>
               </li>
             ))}
           </ul>

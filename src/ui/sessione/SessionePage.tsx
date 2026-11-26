@@ -1,0 +1,251 @@
+// Riepilogo di una verifica: tabelle delle misure, analisi, cronologia.
+import { useState, type FormEvent } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { analizzaSessione, esitoSuggerito, misureMancanti } from '../../analysis/sessione';
+import { DEF_MISURE, formattaValore, nomeRamo } from '../../analysis/misure';
+import { valutaMisura } from '../../analysis/valutazione';
+import { aggiungiNota, cronologia, eliminaEvento, eliminaMisura, eliminaSessione, riapriSessione, testoSintomo } from '../../db/sessioni';
+import { Briciole, Caricamento, NonTrovato } from '../components/Layout';
+import { ElencoAnomalie } from '../components/ElencoAnomalie';
+import { formattaOra, testoEsito } from '../etichette';
+import { RiepilogoCavo, TabellaIsolamento, TabellaResistenzeTensioni } from './TabelleMisure';
+import { EditorRiconoscimento } from './EditorRiconoscimento';
+import { passoDaRiprendere } from './GuidaPage';
+import { useSessione } from './useSessione';
+import type { Sessione } from '../../model/types';
+
+export function SessionePage() {
+  const { id = '' } = useParams();
+  const nav = useNavigate();
+  const ctx = useSessione(id);
+  if (ctx === undefined) return <Caricamento />;
+  if (ctx === null) return <NonTrovato cosa="Verifica" />;
+  const { sessione: s, loop, centrale, impianto, impostazioni } = ctx;
+  const soglie = impostazioni.soglie;
+  const anomalie = analizzaSessione(s, loop, soglie);
+  const suggerito = esitoSuggerito(anomalie, s);
+  const mancanti = misureMancanti(s);
+
+  async function elimina() {
+    if (!confirm('Eliminare questa verifica con tutte le misure e la cronologia?')) return;
+    await eliminaSessione(id);
+    nav(`/loop/${loop.id}`);
+  }
+
+  return (
+    <>
+      <Briciole
+        voci={[
+          { testo: impianto?.cliente || 'Impianto', a: impianto ? `/impianto/${impianto.id}` : undefined },
+          { testo: centrale?.nome || 'Centrale', a: centrale ? `/centrale/${centrale.id}` : undefined },
+          { testo: `Loop ${loop.numero}`, a: `/loop/${loop.id}` },
+          { testo: 'Verifica' },
+        ]}
+      />
+      <div className="titolo-riga">
+        <h1>
+          Verifica loop {loop.numero} <span className="tenue">— {formattaOra(s.inizio)}</span>
+        </h1>
+        <div className="azioni">
+          {s.fine ? (
+            <button onClick={() => riapriSessione(id)}>Riapri</button>
+          ) : (
+            <Link className="bottone primario-link" to={`/sessione/${id}/guida/${passoDaRiprendere(s)}`}>
+              Procedura guidata →
+            </Link>
+          )}
+        </div>
+      </div>
+
+      <section className="scheda stato-sessione">
+        <dl className="dati">
+          <dt>Stato</dt>
+          <dd>
+            {s.fine ? (
+              <>
+                Chiusa il {formattaOra(s.fine)} — <span className={`badge esito-${s.esito}`}>{testoEsito(s.esito)}</span>
+              </>
+            ) : (
+              <>In corso · esito suggerito <span className={`badge esito-${suggerito}`}>{testoEsito(suggerito)}</span></>
+            )}
+          </dd>
+          <dt>Sintomo</dt>
+          <dd>
+            {s.sintomo ? (
+              <>
+                {testoSintomo(s.sintomo.tipo)}
+                {s.sintomo.tipo !== 'nessuno' && s.sintomo.ramo !== 'non_noto' && ` — ${s.sintomo.ramo === 'entrambi' ? 'entrambi i rami' : `ramo ${s.sintomo.ramo}`}`}
+                {s.sintomo.descrizione && <span className="tenue"> · {s.sintomo.descrizione}</span>}
+              </>
+            ) : (
+              <Link to={`/sessione/${id}/guida/sintomo`}>da indicare</Link>
+            )}
+          </dd>
+          <dt>Tecnico / strumento</dt>
+          <dd>
+            {s.tecnico || '—'} · {s.strumento}
+          </dd>
+        </dl>
+        {mancanti.length > 0 && (
+          <p className="tenue">
+            Misure base mancanti: {mancanti.map((m) => `${DEF_MISURE[m.tipo].etichetta}${m.ramo === 'loop' ? '' : ` ${m.ramo}`}`).join(', ')}.
+          </p>
+        )}
+      </section>
+
+      <section className="scheda">
+        <h2>Analisi</h2>
+        <ElencoAnomalie anomalie={anomalie} vuoto={mancanti.length ? 'Nessuna anomalia nelle misure inserite finora.' : 'Nessuna anomalia rilevata.'} />
+      </section>
+
+      <div className="due-colonne">
+        <section className="scheda">
+          <h2>Misure a cavo scollegato</h2>
+          <TabellaIsolamento sessione={s} soglie={soglie} />
+          <p className="tenue legenda">Tocca una cella per misurare o rimisurare.</p>
+        </section>
+        <section className="scheda">
+          <h2>Resistenze e tensioni</h2>
+          <TabellaResistenzeTensioni sessione={s} soglie={soglie} />
+        </section>
+      </div>
+
+      <section className="scheda">
+        <div className="titolo-riga">
+          <h2>Cavo</h2>
+          <Link className="bottone" to={`/sessione/${id}/guida/cavo`}>
+            Modifica
+          </Link>
+        </div>
+        <RiepilogoCavo sessione={s} soglie={soglie} />
+      </section>
+
+      <section className="scheda">
+        <h2>Riconoscimento automatico della centrale</h2>
+        <EditorRiconoscimento sessione={s} />
+      </section>
+
+      <section className="scheda">
+        <h2>Cronologia</h2>
+        <Cronologia s={s} />
+      </section>
+
+      <section className="scheda">
+        <details>
+          <summary>
+            <strong>Storico di tutte le misure ({s.misure.length})</strong>
+          </summary>
+          <StoricoMisure s={s} soglie={soglie} />
+        </details>
+      </section>
+
+      {(s.attivitaDaEseguire || s.note) && (
+        <section className="scheda">
+          {s.attivitaDaEseguire && (
+            <>
+              <h2>Attività ancora da eseguire</h2>
+              <p className="testo-lungo">{s.attivitaDaEseguire}</p>
+            </>
+          )}
+          {s.note && (
+            <>
+              <h2>Note</h2>
+              <p className="testo-lungo">{s.note}</p>
+            </>
+          )}
+          <Link to={`/sessione/${id}/guida/esito`}>Modifica</Link>
+        </section>
+      )}
+
+      <section className="scheda zona-pericolo">
+        <button className="pericolo" onClick={elimina}>
+          Elimina verifica
+        </button>
+      </section>
+    </>
+  );
+}
+
+function Cronologia({ s }: { s: Sessione }) {
+  const [testo, setTesto] = useState('');
+  const [ora, setOra] = useState('');
+  const eventi = cronologia(s);
+  async function aggiungi(e: FormEvent) {
+    e.preventDefault();
+    let iso: string | undefined;
+    if (ora) {
+      const [h, m] = ora.split(':').map(Number);
+      const d = new Date();
+      d.setHours(h, m, 0, 0);
+      iso = d.toISOString();
+    }
+    await aggiungiNota(s.id, testo, undefined, iso);
+    setTesto('');
+    setOra('');
+  }
+  return (
+    <>
+      {eventi.length === 0 ? (
+        <p className="tenue">Nessun evento.</p>
+      ) : (
+        <ol className="cronologia">
+          {eventi.map((e) => (
+            <li key={e.id} className={e.automatico ? 'auto' : 'manuale'}>
+              <time>{formattaOra(e.ora).slice(-5)}</time>
+              <span>{e.testo}</span>
+              {!e.automatico && (
+                <button className="piccolo" onClick={() => eliminaEvento(s.id, e.id)} aria-label="Elimina nota">
+                  ✕
+                </button>
+              )}
+            </li>
+          ))}
+        </ol>
+      )}
+      <form className="aggiungi-nota" onSubmit={aggiungi}>
+        <input value={testo} onChange={(e) => setTesto(e.target.value)} placeholder="Aggiungi un evento (es. sostituita base indirizzo 12)" aria-label="Testo dell'evento" />
+        <input type="time" value={ora} onChange={(e) => setOra(e.target.value)} aria-label="Ora (facoltativa, predefinita adesso)" />
+        <button type="submit" disabled={!testo.trim()}>
+          Aggiungi
+        </button>
+      </form>
+    </>
+  );
+}
+
+function StoricoMisure({ s, soglie }: { s: Sessione; soglie: Parameters<typeof valutaMisura>[2] }) {
+  const ordinate = [...s.misure].sort((a, b) => (a.ora < b.ora ? 1 : -1));
+  if (ordinate.length === 0) return <p className="tenue">Nessuna misura.</p>;
+  return (
+    <div className="scorrimento-x">
+      <table className="tabella">
+        <thead>
+          <tr>
+            <th>Ora</th>
+            <th>Misura</th>
+            <th>Ramo</th>
+            <th>Valore</th>
+            <th />
+          </tr>
+        </thead>
+        <tbody>
+          {ordinate.map((m) => (
+            <tr key={m.id}>
+              <td>{formattaOra(m.ora)}</td>
+              <td>{DEF_MISURE[m.tipo].descrizione}</td>
+              <td>{nomeRamo(m.ramo)}</td>
+              <td className={`v-testo-${valutaMisura(m.tipo, m.valore, soglie)}`}>
+                {formattaValore(m.valore, m.valore === 'OL' ? undefined : DEF_MISURE[m.tipo].unita)}
+              </td>
+              <td>
+                <button className="piccolo" onClick={() => confirm('Eliminare questa misura (inserita per errore)?') && eliminaMisura(s.id, m.id)} aria-label="Elimina misura">
+                  ✕
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}

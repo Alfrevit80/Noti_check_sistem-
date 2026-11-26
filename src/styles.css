@@ -202,3 +202,80 @@ button.link { background: none; border: 0; color: var(--link); text-decoration: 
 .dialogo { width: 100%; max-width: 440px; background: var(--superficie); border-radius: 14px; padding: 1.25rem; display: flex; flex-direction: column; gap: 0.75rem; }
 .dialogo h2 { margin: 0; }
 .dialogo p { margin: 0; }
+
+/* ───── Verifica del loop ───── */
+.passi { display: flex; gap: 0.35rem; overflow-x: auto; padding-bottom: 0.4rem; margin-bottom: 0.75rem; scrollbar-width: thin; }
+.passo { flex: 0 0 auto; display: flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.6rem; border: 1px solid var(--bordo); border-radius: 99px; text-decoration: none; color: var(--tenue); background: var(--superficie); font-size: 0.85rem; }
+.passo .num { display: inline-grid; place-items: center; width: 1.4rem; height: 1.4rem; border-radius: 50%; background: var(--sfondo); font-weight: 700; font-size: 0.75rem; }
+.passo.fatto .num { background: var(--ok); color: #fff; }
+.passo.corrente { border-color: var(--primario); color: var(--testo); font-weight: 600; }
+.passo.corrente .num { background: var(--primario); color: #fff; }
+.passo-scheda h1 { font-size: 1.3rem; }
+.navigazione-passi { justify-content: space-between; margin-bottom: 2rem; }
+.istruzioni { margin: 0 0 0.75rem; padding-left: 1.3rem; }
+
+.sequenza { display: flex; flex-direction: column; gap: 0.75rem; }
+.sequenza-progresso { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.pallino { min-height: 34px; padding: 0.2rem 0.6rem; font-size: 0.82rem; border-radius: 99px; }
+.pallino.corrente { outline: 2px solid var(--link); outline-offset: 1px; }
+.domanda { display: flex; flex-direction: column; gap: 0.6rem; padding: 1rem; border: 2px solid var(--bordo); border-radius: var(--raggio); }
+.domanda h3 { margin: 0.15rem 0 0.25rem; font-size: 1.15rem; }
+.domanda p { margin: 0; }
+.domanda-input { display: flex; align-items: center; gap: 0.5rem; }
+.domanda-input input { font-size: 1.6rem; min-height: 60px; font-variant-numeric: tabular-nums; }
+.domanda-input .unita { font-size: 1.2rem; color: var(--tenue); min-width: 2.5em; }
+.domanda-azioni button { min-height: 52px; min-width: 88px; font-size: 1.05rem; }
+.domanda-azioni button.ol { font-weight: 800; letter-spacing: 0.05em; }
+.precedente { font-size: 0.9rem; background: var(--sfondo); padding: 0.5rem 0.7rem; border-radius: 8px; }
+.riscontro { margin: 0; padding: 0.55rem 0.8rem; border-radius: 8px; border-left: 5px solid; }
+.riscontro.v-ok { background: var(--ok-sfondo); border-color: var(--ok); }
+.riscontro.v-attenzione { background: var(--att-sfondo); border-color: var(--g-media); }
+.riscontro.v-basso { background: var(--err-sfondo); border-color: var(--g-alta); }
+.avviso-scarica { font-size: 1rem; }
+
+.v-ok { --stato: var(--ok); --stato-sfondo: var(--ok-sfondo); }
+.v-attenzione { --stato: var(--att); --stato-sfondo: var(--att-sfondo); }
+.v-basso { --stato: var(--err); --stato-sfondo: var(--err-sfondo); }
+.pallino.v-ok, .pallino.v-attenzione, .pallino.v-basso { background: var(--stato-sfondo); color: var(--stato); border-color: var(--stato); }
+
+.scelte { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.25rem 0 0.75rem; }
+.scelta { min-width: 96px; }
+.scelta.attiva { background: var(--primario); border-color: var(--primario); color: #fff; font-weight: 600; }
+
+.calcoli { margin: 0.75rem 0 0; padding-left: 1.2rem; }
+.testo-ok { color: var(--ok); }
+.testo-att { color: var(--att); font-weight: 600; }
+.testo-err { color: var(--err); font-weight: 600; }
+
+.tabella-misure th[scope='row'] { font-weight: 600; color: var(--testo); font-size: 0.92rem; }
+.cella-misura { padding: 0 !important; }
+.cella-misura a, .cella-misura > .valore { display: flex; flex-direction: column; padding: 0.4rem 0.5rem; text-decoration: none; color: var(--testo); min-height: 44px; justify-content: center; }
+.cella-misura .valore { font-weight: 700; font-variant-numeric: tabular-nums; }
+.cella-misura .ora { font-size: 0.72rem; color: var(--tenue); }
+.cella-misura.v-ok, .cella-misura.v-attenzione, .cella-misura.v-basso { background: var(--stato-sfondo); }
+.cella-misura.v-ok .valore, .cella-misura.v-attenzione .valore, .cella-misura.v-basso .valore { color: var(--stato); }
+.cella-misura.v-vuoto .valore { color: var(--tenue); font-weight: 400; }
+.v-testo-ok { color: var(--ok); } .v-testo-attenzione { color: var(--att); font-weight: 600; } .v-testo-basso { color: var(--err); font-weight: 600; }
+.legenda { font-size: 0.82rem; margin: 0.4rem 0 0; }
+.due-colonne { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 0 1rem; }
+
+.dati { display: grid; grid-template-columns: minmax(120px, max-content) 1fr; gap: 0.35rem 1rem; margin: 0; }
+.dati dt { color: var(--tenue); font-size: 0.88rem; }
+.dati dd { margin: 0; display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
+@media (max-width: 480px) { .dati { grid-template-columns: 1fr; } .dati dd { margin-bottom: 0.4rem; } }
+
+.cronologia { list-style: none; margin: 0 0 0.75rem; padding: 0; display: flex; flex-direction: column; }
+.cronologia li { display: grid; grid-template-columns: 3.2rem 1fr auto; gap: 0.6rem; align-items: center; padding: 0.4rem 0; border-bottom: 1px solid var(--bordo); }
+.cronologia time { font-variant-numeric: tabular-nums; color: var(--tenue); font-size: 0.9rem; }
+.cronologia li.manuale span { font-weight: 600; }
+.aggiungi-nota { display: grid; grid-template-columns: 1fr 7.5rem auto; gap: 0.5rem; }
+@media (max-width: 520px) { .aggiungi-nota { grid-template-columns: 1fr auto; } .aggiungi-nota input:first-child { grid-column: 1 / -1; } }
+
+.riconoscimento { border-top: 1px solid var(--bordo); padding-top: 0.6rem; margin-top: 0.6rem; }
+.tabella-numeri td, .tabella-numeri th { text-align: right; font-variant-numeric: tabular-nums; }
+.tabella-numeri td:first-child, .tabella-numeri th:first-child { text-align: left; }
+.tabella-numeri .totale td { font-weight: 700; border-top: 2px solid var(--bordo); }
+.tabella-input input { min-width: 3.5rem; text-align: right; }
+.tabella-input td:first-child input { min-width: 8rem; text-align: left; }
+.testo-lungo { white-space: pre-wrap; }
+.bottone.primario-link { background: var(--primario); border-color: var(--primario); color: #fff; font-weight: 600; }

@@ -161,6 +161,7 @@ export interface Evento {
   ora: string;
   testo: string;
   automatico: boolean; // generato dall'app (es. "Registrata misura +/terra ramo A")
+  rif?: Id; // misura o riconoscimento a cui si riferisce (eliminandoli si elimina anche l'evento)
 }
 
 export interface Sessione {

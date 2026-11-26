@@ -136,7 +136,9 @@ export const sessioneSchema = z.object({
       }),
     )
     .catch([]),
-  eventi: z.array(z.object({ id: z.string(), ora: str, testo: str, automatico: z.boolean().catch(false) })).catch([]),
+  eventi: z
+    .array(z.object({ id: z.string(), ora: str, testo: str, automatico: z.boolean().catch(false), rif: z.string().optional() }))
+    .catch([]),
   esito: esitoLoop,
   attivitaDaEseguire: str,
   note: str,
