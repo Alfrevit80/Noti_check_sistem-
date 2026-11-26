@@ -16,6 +16,7 @@ import { EditorRiconoscimento } from './EditorRiconoscimento';
 import { useSessione } from './useSessione';
 import { SuggerimentiPasso } from './ComeMisurare';
 import { PannelloPol } from '../pol/PannelloPol';
+import { useAlSalvataggio } from '../salvataggio';
 import type { CtxSessione } from './useSessione';
 
 interface Passo {
@@ -242,6 +243,13 @@ function PassoSintomo({ s, onAvanti }: { s: Sessione; onAvanti: () => void }) {
   const [tipo, setTipo] = useState<Sintomo['tipo'] | undefined>(s.sintomo?.tipo);
   const [ramo, setRamo] = useState<Sintomo['ramo']>(s.sintomo?.ramo ?? 'non_noto');
   const [descrizione, setDescrizione] = useState(s.sintomo?.descrizione ?? '');
+  useAlSalvataggio(() => {
+    if (!tipo) return;
+    const nuovo = { tipo, ramo: tipo === 'nessuno' ? ('non_noto' as const) : ramo, descrizione: descrizione.trim() };
+    const vecchio = s.sintomo;
+    if (vecchio && vecchio.tipo === nuovo.tipo && vecchio.ramo === nuovo.ramo && vecchio.descrizione === nuovo.descrizione) return;
+    return impostaSintomo(s.id, nuovo);
+  });
   async function conferma() {
     if (!tipo) return;
     await impostaSintomo(s.id, { tipo, ramo: tipo === 'nessuno' ? 'non_noto' : ramo, descrizione: descrizione.trim() });
@@ -366,6 +374,7 @@ function PassoEsito({ ctx }: { ctx: CtxSessione }) {
           {s.fine ? 'Aggiorna esito' : 'Chiudi verifica'}
         </button>
       </div>
+      <p className="tenue">Dopo la chiusura, dal riepilogo della verifica puoi aggiungere le foto e generare il rapportino PDF.</p>
     </>
   );
 }

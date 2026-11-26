@@ -2,6 +2,7 @@
 // Il testo viene tenuto in uno stato locale e salvato dopo una breve pausa o all'uscita dal campo,
 // così la digitazione resta fluida anche con il database che si aggiorna sotto.
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useAlSalvataggio } from '../salvataggio';
 
 interface BaseProps {
   etichetta: string;
@@ -19,7 +20,7 @@ export function Campo({ etichetta, aiuto, className, children }: BaseProps & { c
   );
 }
 
-function useBozza<T>(valore: T, salva: (v: T) => void, ritardo = 500) {
+function useBozza<T>(valore: T, salva: (v: T) => unknown, ritardo = 500) {
   const [bozza, setBozza] = useState(valore);
   const inModifica = useRef(false);
   const timer = useRef<ReturnType<typeof setTimeout>>();
@@ -38,6 +39,17 @@ function useBozza<T>(valore: T, salva: (v: T) => void, ritardo = 500) {
     clearTimeout(timer.current);
     timer.current = setTimeout(() => ultimo.current(v), ritardo);
   };
+  // tasto Salva: scrive subito la bozza ancora in modifica
+  const ultimaBozza = useRef(bozza);
+  ultimaBozza.current = bozza;
+  useAlSalvataggio(() => {
+    if (!inModifica.current) return;
+    clearTimeout(timer.current);
+    if (ultimaBozza.current !== valore) {
+      const r = ultimo.current(ultimaBozza.current);
+      return r instanceof Promise ? r : undefined;
+    }
+  });
   const esci = () => {
     clearTimeout(timer.current);
     if (bozza !== valore) ultimo.current(bozza);
@@ -49,7 +61,7 @@ function useBozza<T>(valore: T, salva: (v: T) => void, ritardo = 500) {
 export function CampoTesto(
   props: BaseProps & {
     valore: string;
-    onSalva: (v: string) => void;
+    onSalva: (v: string) => unknown;
     multiriga?: boolean;
     tipo?: 'text' | 'date' | 'password' | 'email';
     placeholder?: string;
@@ -80,7 +92,7 @@ export function CampoTesto(
 export function CampoNumero(
   props: BaseProps & {
     valore: number | undefined;
-    onSalva: (v: number | undefined) => void;
+    onSalva: (v: number | undefined) => unknown;
     unita?: string;
     min?: number;
     intero?: boolean;
@@ -90,7 +102,7 @@ export function CampoNumero(
   const { bozza, cambia, esci } = useBozza(testo, (t) => {
     const n = leggiNumero(t);
     if (n === null) return; // non valido: non salvo
-    props.onSalva(n);
+    return props.onSalva(n);
   });
   const nonValido = leggiNumero(bozza) === null;
   return (

@@ -5,6 +5,7 @@ import { eliminaRiconoscimento, salvaRiconoscimento } from '../../db/sessioni';
 import { totaliRiconoscimento } from '../../analysis/riconoscimento';
 import { formattaOra } from '../etichette';
 import { TIPI_HW } from '../../settings/tipiHw';
+import { useAlSalvataggio } from '../salvataggio';
 
 const RIGHE_INIZIALI: RigaRiconoscimento[] = [{ tipoDispositivo: '', nuo: 0, inc: 0, tot: 0, man: 0 }];
 
@@ -99,6 +100,11 @@ function Modulo(props: {
 }) {
   const [righe, setRighe] = useState<RigaRiconoscimento[]>(props.iniziale?.righe ?? RIGHE_INIZIALI);
   const [nota, setNota] = useState(props.iniziale?.nota ?? '');
+  // tasto Salva: salva il riconoscimento in corso se contiene dati
+  useAlSalvataggio(() => {
+    const valide = righe.filter((r) => r.tipoDispositivo.trim() || r.tot);
+    if (valide.length) return props.onSalva(valide, nota);
+  });
   const set = (i: number, patch: Partial<RigaRiconoscimento>) => setRighe(righe.map((r, j) => (j === i ? { ...r, ...patch } : r)));
   return (
     <div className="scheda evidenza">

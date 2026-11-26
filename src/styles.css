@@ -366,3 +366,13 @@ button.link { background: none; border: 0; color: var(--link); text-decoration: 
 .registri { margin-bottom: 0.75rem; }
 .registro { border: 1px solid var(--bordo); border-radius: 8px; padding: 0.5rem 0.75rem; margin-bottom: 0.5rem; }
 .registro summary { cursor: pointer; }
+
+.galleria { list-style: none; padding: 0; margin: 0.75rem 0 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.75rem; }
+.galleria li { display: flex; flex-direction: column; gap: 0.35rem; }
+.galleria img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 8px; border: 1px solid var(--bordo); max-width: 100%; }
+.pulsante-pdf { display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-start; }
+
+.barra nav { gap: 0.35rem; }
+.avviso-salvataggio { position: fixed; left: 50%; transform: translateX(-50%); top: calc(env(safe-area-inset-top, 0px) + 3.6rem); z-index: 60; background: var(--ok); color: #fff; padding: 0.55rem 1rem; border-radius: 99px; font-weight: 600; box-shadow: 0 4px 14px #0004; white-space: nowrap; font-size: 0.92rem; }
+.avviso-salvataggio.errore { background: var(--err); }
+@media (max-width: 420px) { .barra .salva span { display: none; } .barra nav a { padding: 0.45rem 0.45rem; } }

@@ -13,6 +13,12 @@ import { EditorRiconoscimento } from './EditorRiconoscimento';
 import { passoDaRiprendere } from './GuidaPage';
 import { useSessione } from './useSessione';
 import { PannelloPol } from '../pol/PannelloPol';
+import { FotoSessione } from './FotoSessione';
+import { PulsantePdf } from './PulsantePdf';
+import { db } from '../../db/db';
+import { modelloLoop } from '../../report/modello';
+import { pdfLoop } from '../../report/pdfLoop';
+import { nomePdf } from '../../report/genera';
 import type { Sessione } from '../../model/types';
 
 export function SessionePage() {
@@ -129,6 +135,24 @@ export function SessionePage() {
       <section className="scheda">
         <h2>Riconoscimento automatico della centrale</h2>
         <EditorRiconoscimento sessione={s} />
+      </section>
+
+      {impianto && (
+        <section className="scheda">
+          <h2>Foto</h2>
+          <FotoSessione impiantoId={impianto.id} sessioneId={s.id} />
+        </section>
+      )}
+
+      <section className="scheda">
+        <h2>Rapportino</h2>
+        <p className="tenue">PDF A4 con intestazione, stato iniziale e finale, misure, mappatura, riconoscimento, analisi, cronologia, foto, esito e spazio per le firme.</p>
+        <PulsantePdf
+          etichetta="Genera rapportino PDF"
+          primario
+          nome={nomePdf(['Rapportino', impianto?.cliente, `Loop${loop.numero}`, s.inizio.slice(0, 10)])}
+          prepara={async () => pdfLoop(modelloLoop(s, loop, centrale, impianto, impostazioni, await db.foto.where('sessioneId').equals(s.id).toArray()))}
+        />
       </section>
 
       <section className="scheda">

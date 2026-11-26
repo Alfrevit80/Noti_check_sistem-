@@ -10,6 +10,10 @@ import { Briciole, Caricamento, NonTrovato } from '../components/Layout';
 import { CampoTesto } from '../components/Campi';
 import { ElencoAnomalie } from '../components/ElencoAnomalie';
 import { useState, type FormEvent } from 'react';
+import { PulsantePdf } from '../sessione/PulsantePdf';
+import { pdfImpianto } from '../../report/pdfImpianto';
+import { nomePdf } from '../../report/genera';
+import { leggiImpostazioni } from '../../db/repo';
 
 export function ImpiantoPage() {
   const { id = '' } = useParams();
@@ -132,6 +136,20 @@ export function ImpiantoPage() {
         </section>
       )}
       {centrali.length <= 1 && anomalieRete.length > 0 && <ElencoAnomalie anomalie={anomalieRete} />}
+
+      <section className="scheda">
+        <h2>Rapportino riepilogativo</h2>
+        <p className="tenue">Centrali, esito di ogni loop con l'ultima verifica, rete tra centrali, firme.</p>
+        <PulsantePdf
+          etichetta="Genera riepilogo PDF"
+          nome={nomePdf(['Riepilogo', impianto.cliente, impianto.nomeImpianto, impianto.data])}
+          prepara={async () => {
+            const loops = await db.loops.where('centraleId').anyOf(centrali.map((c) => c.id)).toArray();
+            const sessioni = await db.sessioni.where('loopId').anyOf(loops.map((l) => l.id)).toArray();
+            return pdfImpianto({ impianto, centrali, loops, sessioni, rete, impostazioni: await leggiImpostazioni() });
+          }}
+        />
+      </section>
 
       <section className="scheda zona-pericolo">
         <button className="pericolo" onClick={elimina}>

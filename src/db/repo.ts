@@ -230,3 +230,35 @@ export async function creaSessione(loopId: string, d: NcsDB = dbApp): Promise<Se
   await d.sessioni.add(s);
   return s;
 }
+
+// ───────── Foto ─────────
+
+/** Riduce una foto (max 1600 px, JPEG) prima di salvarla: occupa meno spazio e si cifra più in fretta. */
+export async function preparaFoto(file: Blob, latoMax = 1600, qualita = 0.8): Promise<{ mime: string; dati: Uint8Array }> {
+  try {
+    const img = await createImageBitmap(file);
+    const k = Math.min(1, latoMax / Math.max(img.width, img.height));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(img.width * k);
+    canvas.height = Math.round(img.height * k);
+    canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height);
+    const blob: Blob = await new Promise((ok, ko) => canvas.toBlob((b) => (b ? ok(b) : ko(new Error('conversione'))), 'image/jpeg', qualita));
+    return { mime: 'image/jpeg', dati: new Uint8Array(await blob.arrayBuffer()) };
+  } catch {
+    return { mime: file.type || 'image/jpeg', dati: new Uint8Array(await file.arrayBuffer()) };
+  }
+}
+
+export async function aggiungiFoto(impiantoId: string, sessioneId: string | undefined, foto: { mime: string; dati: Uint8Array }, didascalia: string, d: NcsDB = dbApp) {
+  const f = { id: nuovoId(), impiantoId, sessioneId, didascalia, ora: adesso(), mime: foto.mime, dati: foto.dati };
+  await d.foto.add(f);
+  return f.id;
+}
+
+export async function aggiornaFoto(id: string, didascalia: string, d: NcsDB = dbApp) {
+  await d.foto.update(id, { didascalia });
+}
+
+export async function eliminaFoto(id: string, d: NcsDB = dbApp) {
+  await d.foto.delete(id);
+}
