@@ -74,3 +74,14 @@ describe('riconoscimento automatico', () => {
     expect(analizzaRiconoscimento([nuovo, vecchio], loop())).toEqual([]);
   });
 });
+
+describe('riconoscimento: regole dal manuale', () => {
+  const r1 = (x: { nuo: number; inc: number; tot: number; man: number }) =>
+    analizzaRiconoscimento([{ id: 'r', ora: '', righe: [{ tipoDispositivo: 'M721', ...x }], nota: '' }], loop());
+  it('TOT minore di NUO + INC = errore di trascrizione', () => {
+    expect(codici(r1({ nuo: 3, inc: 1, tot: 2, man: 0 }))).toContain('RIC_TOT_INCOERENTE_M721');
+  });
+  it('avviso: CONF rimuove i MAN', () => {
+    expect(r1({ nuo: 0, inc: 0, tot: 5, man: 1 })[0].doveIntervenire.join(' ')).toMatch(/CONF.*rimossi/);
+  });
+});

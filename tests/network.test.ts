@@ -62,3 +62,11 @@ describe('analizzaRete', () => {
     expect(r[0].spiegazione).toContain('manca');
   });
 });
+
+describe('indirizzo di rete (manuale: 1-32)', () => {
+  it('fuori range o non numerico', () => {
+    expect(analizzaRete(null, [centrale('1', '33')])[0].codice).toBe('RETE_NODO_FUORI_RANGE');
+    expect(analizzaRete(null, [centrale('1', 'A')])[0].codice).toBe('RETE_NODO_FUORI_RANGE');
+    expect(analizzaRete(null, [centrale('1', '32')])).toEqual([]);
+  });
+});

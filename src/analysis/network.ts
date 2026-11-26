@@ -1,6 +1,7 @@
 // Regole di analisi per la rete tra centrali.
 import type { Centrale, Rete } from '../model/types';
 import { ordinaAnomalie, type Anomalia, type Gravita } from './findings';
+import { LIMITI_LINEA } from '../settings/tipiHw';
 
 interface RegolaVoce {
   gravita: Gravita;
@@ -90,6 +91,22 @@ export function analizzaRete(rete: Rete | undefined | null, centrali: Centrale[]
         spiegazione: 'Ogni CPU in rete deve avere un indirizzo univoco.',
         doveIntervenire: [`Correggere l'indirizzo di: ${lista.map((c) => c.nome).join(', ')}.`],
         riferimenti: lista.map((c) => c.id),
+      });
+    }
+  }
+
+  for (const c of centrali) {
+    const k = c.nodoCpu.trim();
+    if (!k) continue;
+    const n = Number(k);
+    if (!Number.isInteger(n) || n < 1 || n > LIMITI_LINEA.indirizzoReteMax) {
+      out.push({
+        codice: 'RETE_NODO_FUORI_RANGE',
+        gravita: 'media',
+        titolo: `Indirizzo CPU "${k}" non valido (${c.nome})`,
+        spiegazione: `L'indirizzo della centrale sul CAN-BUS va da 1 a ${LIMITI_LINEA.indirizzoReteMax}.`,
+        doveIntervenire: ['Correggere l\'indirizzo (Menù Programmazione → Sistema → Indirizzo).'],
+        riferimenti: [c.id],
       });
     }
   }

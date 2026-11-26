@@ -74,6 +74,10 @@ export interface Loop {
   descrizione: string;
   totaleAttesoSensori?: number;
   totaleAttesoModuli?: number;
+  // Programmazione della linea in centrale (Menù Sistema → Linea)
+  stile?: 'aperto' | 'chiuso';
+  protocollo?: 'ADV' | 'CLIP';
+  resistenzaLineaOhm?: number; // "Resistenza di linea" impostata in centrale
   esito: EsitoLoop;
   note: string;
 }

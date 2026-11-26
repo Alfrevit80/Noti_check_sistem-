@@ -40,6 +40,19 @@ export function LoopPage() {
           <CampoTesto etichetta="Descrizione / zona servita" valore={loop.descrizione} onSalva={(v) => salva({ descrizione: v })} className="largo" />
           <CampoNumero etichetta="Sensori attesi" intero valore={loop.totaleAttesoSensori} onSalva={(v) => salva({ totaleAttesoSensori: v })} aiuto="Da progetto o da programmazione" />
           <CampoNumero etichetta="Moduli attesi" intero valore={loop.totaleAttesoModuli} onSalva={(v) => salva({ totaleAttesoModuli: v })} />
+          <CampoScelta
+            etichetta="Stile della linea (in centrale)"
+            valore={loop.stile ?? ''}
+            opzioni={[{ valore: '', testo: 'Non indicato' }, { valore: 'chiuso', testo: 'Loop chiuso' }, { valore: 'aperto', testo: 'Linea aperta' }]}
+            onSalva={(v) => salva({ stile: v === '' ? undefined : (v as 'aperto' | 'chiuso') })}
+          />
+          <CampoScelta
+            etichetta="Protocollo"
+            valore={loop.protocollo ?? ''}
+            opzioni={[{ valore: '', testo: 'Non indicato' }, { valore: 'ADV', testo: 'ADV (indirizzi 1-159)' }, { valore: 'CLIP', testo: 'CLIP (indirizzi 1-99)' }]}
+            onSalva={(v) => salva({ protocollo: v === '' ? undefined : (v as 'ADV' | 'CLIP') })}
+          />
+          <CampoNumero etichetta="Resistenza di linea impostata" unita="Ω" valore={loop.resistenzaLineaOhm} onSalva={(v) => salva({ resistenzaLineaOhm: v })} aiuto="Menù Sistema → Linea" />
           <CampoScelta<EsitoLoop> etichetta="Esito" valore={loop.esito} opzioni={ESITI_LOOP} onSalva={(v) => salva({ esito: v })} />
           <CampoTesto etichetta="Note" multiriga valore={loop.note} onSalva={(v) => salva({ note: v })} className="largo" />
         </div>

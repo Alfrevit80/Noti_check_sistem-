@@ -61,6 +61,9 @@ export const loopSchema = z.object({
   descrizione: str,
   totaleAttesoSensori: optNum,
   totaleAttesoModuli: optNum,
+  stile: z.enum(['aperto', 'chiuso']).optional().catch(undefined),
+  protocollo: z.enum(['ADV', 'CLIP']).optional().catch(undefined),
+  resistenzaLineaOhm: optNum,
   esito: esitoLoop,
   note: str,
 });

@@ -4,11 +4,10 @@ import type { RigaRiconoscimento, Sessione } from '../../model/types';
 import { eliminaRiconoscimento, salvaRiconoscimento } from '../../db/sessioni';
 import { totaliRiconoscimento } from '../../analysis/riconoscimento';
 import { formattaOra } from '../etichette';
+import { TIPI_HW } from '../../settings/tipiHw';
 
 const RIGHE_INIZIALI: RigaRiconoscimento[] = [{ tipoDispositivo: '', nuo: 0, inc: 0, tot: 0, man: 0 }];
 
-/** Tipi HW come compaiono nel sommario dell'AM-8200N (suggerimenti, si può scrivere qualsiasi tipo). */
-export const TIPI_HW_SUGGERITI = ['NFX(I)-OPT', 'NFX(I)-SMT2', 'NFX(I)-SMT3', 'NFX(I)-TFIX58', 'NFX(I)-TFIX78', 'NFX(I)-TDIFF', 'IRX-751CTEM'];
 const COLONNE = ['nuo', 'inc', 'tot', 'man'] as const;
 
 export function EditorRiconoscimento({ sessione }: { sessione: Sessione }) {
@@ -20,7 +19,8 @@ export function EditorRiconoscimento({ sessione }: { sessione: Sessione }) {
       <p className="tenue">
         Al termine dell'auto-riconoscimento il display mostra il sommario per tipo di dispositivo: NUO (nuovi dispositivi trovati),
         INC (programmati in precedenza ma non coerenti con quanto rilevato, es. PHOT rilevato come THER), TOT (totale) e MAN
-        (programmati ma mancanti). Ricopia qui i valori, una riga per tipo.
+        (programmati ma mancanti). Ricopia qui i valori, una riga per tipo. Consiglio: avvia l'auto-riconoscimento con «Verifica
+        doppi indirizzi» = SI.
       </p>
       {modifica !== null && (
         <Modulo
@@ -148,8 +148,13 @@ function Modulo(props: {
         </table>
       </div>
       <datalist id="tipi-hw">
-        {[...new Set([...props.tipiUsati, ...TIPI_HW_SUGGERITI])].map((t) => (
+        {[...new Set(props.tipiUsati)].filter((t) => !TIPI_HW.some((x) => x.codice === t)).map((t) => (
           <option key={t} value={t} />
+        ))}
+        {TIPI_HW.map((t) => (
+          <option key={t.codice} value={t.codice}>
+            {t.descrizione}
+          </option>
         ))}
       </datalist>
       <button className="piccolo" onClick={() => setRighe([...righe, { tipoDispositivo: '', nuo: 0, inc: 0, tot: 0, man: 0 }])}>
