@@ -131,7 +131,7 @@ export function analizzaLettura(l: LetturaPol, loop: Pick<Loop, 'protocollo'>): 
         riferimenti: minuscoli,
       });
     }
-    const iso = isolati(g);
+    const iso = f === 'sensori' ? isolati(g) : []; // i moduli sono spesso sparsi per progetto
     if (iso.length) {
       out.push({
         codice: cod('ISOLATI'),

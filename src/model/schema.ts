@@ -94,6 +94,27 @@ const letturaSchema = z.object({
       }),
     )
     .optional(),
+  dettagli: z
+    .array(
+      z.object({
+        famiglia: z.enum(['sensori', 'moduli']),
+        indirizzo: z.number(),
+        tipoCodice: str,
+        tipoNome: str,
+        costruttore: str,
+        seriale: str,
+        dataProd: str,
+        pw: z.array(z.number()).catch([]),
+        corrente: optNum,
+        correnteIniziale: optNum,
+        sta: z.string().optional(),
+        iso: z.string().optional(),
+        dep: str,
+      }),
+    )
+    .optional()
+    .catch(undefined),
+  infoFile: z.object({ software: z.string().optional(), database: z.string().optional() }).optional().catch(undefined),
   nomeFile: z.string().optional(),
   nota: str,
 });

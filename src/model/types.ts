@@ -146,6 +146,23 @@ export interface NodoMappatura {
   derivazione?: number; // numero della derivazione (T) se il dispositivo non è sulla dorsale
 }
 
+/** Riga di un file di manutenzione (.MNT) del POL-200-TS. */
+export interface DispositivoMnt {
+  famiglia: FamigliaPol;
+  indirizzo: number;
+  tipoCodice: string; // es. "020"
+  tipoNome: string; // es. "OTTIC0(EU)"
+  costruttore: string; // NOT, HON, MOR, XXX…
+  seriale: string; // XXXXXXXX = non letto
+  dataProd: string; // YY/WW
+  pw: number[]; // PW1…PWn
+  corrente?: number; // colonna I
+  correnteIniziale?: number; // colonna I_I
+  sta?: string;
+  iso?: string; // Y / N / X
+  dep: string; // dispositivo da cui dipende verso la centrale: "S002", "M004", "PNL" o "" (non mappato)
+}
+
 export interface LetturaPol {
   id: Id;
   ramo: Ramo | 'chiuso'; // 'chiuso' = lettura a loop richiuso
@@ -157,6 +174,9 @@ export interface LetturaPol {
   colori?: { sensori: Record<number, ColorePol>; moduli: Record<number, ColorePol> };
   vRitorno?: number;
   mappatura?: NodoMappatura[];
+  /** Dati per dispositivo importati da un file .MNT (con la dipendenza DEP = mappatura fisica). */
+  dettagli?: DispositivoMnt[];
+  infoFile?: { software?: string; database?: string };
   nomeFile?: string;
   nota: string;
 }

@@ -7,6 +7,7 @@ import { analizzaTensioni } from './voltages';
 import { analizzaRiconoscimento } from './riconoscimento';
 import { analizzaLinea } from './linea';
 import { analizzaLetture, confrontaConCentrale } from './pol';
+import { analizzaFileLetture } from './mappa';
 import { SIGLE_PREDEFINITE } from '../settings/defaults';
 import type { SiglaPol } from '../model/types';
 import { DEF_MISURE, TIPI_ISOLAMENTO, valoreUltima, type RamoMisura } from './misure';
@@ -72,6 +73,7 @@ export function analizzaSessione(s: Sessione, loop: Loop, soglie: Soglie, sigle:
     ...analizzaRiconoscimento(s.riconoscimenti, loop),
     ...analizzaLetture(s.letture, loop, sigle, soglie),
     ...confrontaConCentrale(s.letture, s.riconoscimenti),
+    ...analizzaFileLetture(s.letture, sigle, soglie),
     ...confrontoSintomo(s, soglie),
   ]);
 }

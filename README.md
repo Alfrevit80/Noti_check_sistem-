@@ -46,7 +46,7 @@ npm run preview   # prova della build (service worker incluso)
 1. ✅ Struttura, modello dati, anagrafica impianto e centrali, rete tra centrali, export/import, PWA
 2. ✅ Procedura guidata del loop, tabelle misure, regole su isolamento, resistenza, tensioni, cavo, riconoscimento
 3. ✅ Griglie POL (inserimento manuale), analisi lato A / lato B, vista sequenza, storico e confronto letture, confronto POL ↔ centrale
-4. ⏳ Import file POL-200-TS (.MNT, log)
+4. ✅ Import dei file di manutenzione .MNT del POL-200-TS: griglie, dati per dispositivo, mappatura fisica dalla colonna DEP
 5. ⏳ Rapportino PDF
 6. ⏳ Integrazione con Claude
 

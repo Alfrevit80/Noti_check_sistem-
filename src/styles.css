@@ -343,3 +343,23 @@ button.link { background: none; border: 0; color: var(--link); text-decoration: 
 .elenco-letture { margin-bottom: 0.5rem; }
 .confronto-box { margin-top: 1rem; }
 .confronto { margin-top: 0.6rem; }
+
+/* ───── Mappatura ───── */
+.mappa { font-size: 0.9rem; }
+.mappa-centrale { font-weight: 700; margin: 0 0 0.3rem; }
+.mappa-ramo { list-style: none; margin: 0; padding: 0 0 0 0.9rem; border-left: 3px solid #8f9bb3; }
+.mappa-ramo.derivato { margin: 0.15rem 0 0.35rem 1.4rem; border-left: 3px dashed #d98a00; }
+.mappa-nodo { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; padding: 0.15rem 0.4rem; margin: 0.12rem 0; border-radius: 6px; }
+.mappa-nodo .pos { color: var(--tenue); font-size: 0.75rem; min-width: 1.6rem; text-align: right; font-variant-numeric: tabular-nums; }
+.mappa-nodo .sigla { font-weight: 700; }
+.mappa-nodo .tipo { font-size: 0.78rem; }
+.mappa-nodo.moduli { background: #e7f0ff; }
+.mappa-nodo.corrotto, .mappa-c-corrotto { background: #ffec99; }
+.mappa-nodo.fine, .mappa-c-fine { outline: 2px solid #c62828; }
+.mappa-c-modulo { background: #e7f0ff; }
+@media (prefers-color-scheme: dark) { .mappa-nodo.moduli { background: #1d2a44; } .mappa-nodo.corrotto { background: #4a3d10; } }
+.tabella-dettagli { font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+.tabella-dettagli td, .tabella-dettagli th { padding: 0.2rem 0.35rem; white-space: nowrap; }
+.riga-corrotta td { background: var(--att-sfondo); }
+.importa-mnt { margin-bottom: 0.75rem; }
+.file-mnt { border-bottom: 1px solid var(--bordo); padding-bottom: 0.5rem; margin-bottom: 0.5rem; }

@@ -12,6 +12,9 @@ import { LegendaStati } from './LegendaStati';
 import { VistaSequenza } from './VistaSequenza';
 import { NOME_RAMO } from './LetturaPage';
 import { ConfrontoLetture } from './ConfrontoLetture';
+import { ImportaMnt } from './ImportaMnt';
+import { VistaMappatura } from './VistaMappatura';
+import { analizzaFileLetture } from '../../analysis/mappa';
 
 const STATI_AB: StatoCella[] = ['soloA', 'soloB', 'entrambi', 'doppio', 'incerto'];
 const STATI_CHIUSO: StatoCella[] = ['presente', 'perso', 'incerto'];
@@ -19,7 +22,8 @@ const STATI_CHIUSO: StatoCella[] = ['presente', 'perso', 'incerto'];
 export function PannelloPol({ s, loop, sigle, soglie, conAnalisi = true }: { s: Sessione; loop: Loop; sigle: readonly SiglaPol[]; soglie: Soglie; conAnalisi?: boolean }) {
   const nav = useNavigate();
   const [famiglia, setFamiglia] = useState<FamigliaPol>('sensori');
-  const [vista, setVista] = useState<'griglia' | 'sequenza'>('griglia');
+  const [vista, setVista] = useState<'griglia' | 'sequenza' | 'mappa'>('griglia');
+  const [mappaId, setMappaId] = useState<string | null>(null);
 
   async function nuova(ramo: LetturaPol['ramo']) {
     const id = await creaLettura(s.id, ramo);
@@ -36,6 +40,9 @@ export function PannelloPol({ s, loop, sigle, soglie, conAnalisi = true }: { s: 
   const ab = A && B ? confrontaAB(A, B, sigle, soglie) : null;
   const ordinate = [...s.letture].sort((x, y) => (x.ora < y.ora ? 1 : -1));
   const max = Math.max(20, ...indirizzi(combinata));
+  const conMappaArr = [A, B, C].filter((x): x is LetturaPol => !!x?.dettagli?.length);
+  const conMappa = conMappaArr.length ? conMappaArr : null;
+  const mappaSel = conMappa?.find((l) => l.id === mappaId) ?? conMappa?.[0];
 
   return (
     <>
@@ -44,6 +51,7 @@ export function PannelloPol({ s, loop, sigle, soglie, conAnalisi = true }: { s: 
         <button className="primario" onClick={() => nuova('B')}>+ Lettura lato B</button>
         <button onClick={() => nuova('chiuso')}>+ Lettura a loop chiuso</button>
       </div>
+      <ImportaMnt sessioneId={s.id} />
 
       {ordinate.length > 0 && (
         <ul className="elenco elenco-letture">
@@ -80,6 +88,11 @@ export function PannelloPol({ s, loop, sigle, soglie, conAnalisi = true }: { s: 
               <button role="tab" aria-selected={vista === 'sequenza'} className={vista === 'sequenza' ? 'attiva' : ''} onClick={() => setVista('sequenza')}>
                 Sequenza
               </button>
+              {conMappa && (
+                <button role="tab" aria-selected={vista === 'mappa'} className={vista === 'mappa' ? 'attiva' : ''} onClick={() => setVista('mappa')}>
+                  Mappatura
+                </button>
+              )}
             </div>
           </div>
           {ab && (
@@ -89,7 +102,20 @@ export function PannelloPol({ s, loop, sigle, soglie, conAnalisi = true }: { s: 
               {ab.stato === 'parziale' && 'Alcuni dispositivi rispondono da un solo lato.'}
             </p>
           )}
-          {vista === 'griglia' ? (
+          {vista === 'mappa' && conMappa ? (
+            <>
+              {conMappa.length > 1 && (
+                <div className="scelte">
+                  {conMappa.map((l) => (
+                    <button key={l.id} type="button" className={l.id === mappaSel?.id ? 'scelta attiva' : 'scelta'} onClick={() => setMappaId(l.id)}>
+                      {NOME_RAMO[l.ramo]}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {mappaSel && <VistaMappatura l={mappaSel} />}
+            </>
+          ) : vista === 'griglia' ? (
             <GrigliaPol griglia={combinata} stati={stati} etichetta={`Stato ${famiglia}`} />
           ) : (
             <VistaSequenza griglia={combinata} stati={stati} fino={famiglia === 'sensori' ? 159 : Math.min(159, Math.ceil(max / 20) * 20)} etichetta={`Sequenza ${famiglia}`} />
@@ -101,7 +127,7 @@ export function PannelloPol({ s, loop, sigle, soglie, conAnalisi = true }: { s: 
       {conAnalisi && ordinate.length > 0 && (
         <>
           <h3>Analisi delle letture</h3>
-          <ElencoAnomalie anomalie={ordinaAnomalie([...analizzaLetture(s.letture, loop, sigle, soglie), ...confrontaConCentrale(s.letture, s.riconoscimenti)])} />
+          <ElencoAnomalie anomalie={ordinaAnomalie([...analizzaLetture(s.letture, loop, sigle, soglie), ...confrontaConCentrale(s.letture, s.riconoscimenti), ...analizzaFileLetture(s.letture, sigle, soglie)])} />
         </>
       )}
 

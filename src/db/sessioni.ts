@@ -202,3 +202,9 @@ export async function eliminaLettura(sessioneId: string, letturaId: string, d: N
     eventi: s.eventi.filter((e) => e.rif !== letturaId),
   }));
 }
+
+/** Aggiunge una lettura già pronta (es. importata da un file .MNT). */
+export async function aggiungiLettura(sessioneId: string, l: LetturaPol, d: NcsDB = dbApp) {
+  const testo = l.nomeFile ? `${testoEventoLettura(l)} (importata da ${l.nomeFile})` : testoEventoLettura(l);
+  await modifica(sessioneId, d, (s) => ({ ...s, letture: [...s.letture, l], eventi: [...s.eventi, evento(testo, true, l.id, l.ora)] }));
+}

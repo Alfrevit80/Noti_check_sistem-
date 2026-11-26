@@ -11,6 +11,8 @@ import { ElencoAnomalie } from '../components/ElencoAnomalie';
 import { formattaOra } from '../etichette';
 import { GrigliaPol } from './GrigliaPol';
 import { Tavolozza, type Pennello } from './Tavolozza';
+import { TabellaDettagli, VistaMappatura } from './VistaMappatura';
+import { analizzaDettagli, analizzaMappa } from '../../analysis/mappa';
 
 export const NOME_RAMO: Record<LetturaPol['ramo'], string> = { A: 'Lato A', B: 'Lato B', chiuso: 'Loop chiuso' };
 
@@ -59,7 +61,7 @@ export function LetturaPage() {
     nav(`/sessione/${s.id}/guida/pol`);
   }
 
-  const anomalie = analizzaLettura(l, loop);
+  const anomalie = [...analizzaLettura(l, loop), ...analizzaDettagli(l), ...analizzaMappa(l, impostazioni.sigle, impostazioni.soglie)];
   const conta = (f: FamigliaPol) => indirizzi(l[f]).length;
 
   return (
@@ -121,6 +123,26 @@ export function LetturaPage() {
         <ElencoAnomalie anomalie={anomalie} vuoto="Nessuna anomalia in questa lettura." />
         <p className="tenue">Il confronto tra lato A e lato B è nel passo «Letture POL» e nel riepilogo della verifica.</p>
       </section>
+
+      {l.dettagli?.length ? (
+        <>
+          <section className="scheda">
+            <h2>Mappatura (ordine fisico)</h2>
+            <p className="tenue">
+              Dal file {l.nomeFile}: ogni dispositivo dipende da quello sopra di lui verso la centrale. Le derivazioni sono rientrate.
+            </p>
+            <VistaMappatura l={l} />
+          </section>
+          <section className="scheda">
+            <details>
+              <summary>
+                <strong>Dati per dispositivo dal file ({l.dettagli.length})</strong>
+              </summary>
+              <TabellaDettagli l={l} />
+            </details>
+          </section>
+        </>
+      ) : null}
 
       <section className="scheda">
         <CampoTesto etichetta="Nota sulla lettura" multiriga valore={l.nota} onSalva={(v) => aggiornaLettura(s.id, lid, { nota: v })} />
