@@ -142,6 +142,17 @@ export function analizzaLettura(l: LetturaPol, loop: Pick<Loop, 'protocollo'>): 
         riferimenti: iso,
       });
     }
+    const daConf = l.daVerificare?.[f] ?? [];
+    if (daConf.length) {
+      out.push({
+        codice: cod('DA_CONFERMARE'),
+        gravita: 'bassa',
+        titolo: `Celle lette dalla foto da confermare (${F}, ${dove}): ${intervalli(daConf)}`,
+        spiegazione: 'Claude non era sicuro di queste celle: confrontarle con il display del POL.',
+        doveIntervenire: ['Aprire la lettura e confermare o correggere le celle evidenziate.'],
+        riferimenti: daConf,
+      });
+    }
     const massimo = loop.protocollo === 'CLIP' ? LIMITI_LINEA.indirizziClip : LIMITI_LINEA.indirizziAdv;
     const fuori = ii.filter((n) => n > massimo);
     if (fuori.length) {

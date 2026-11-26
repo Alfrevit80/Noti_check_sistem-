@@ -52,6 +52,7 @@ export interface ModelloLoop {
   anomalie: Anomalia[];
   cronologia: { ora: string; testo: string }[];
   foto: { didascalia: string; mime: string; dati: Uint8Array }[];
+  diagnosiClaude?: { testo: string; ora: string };
   esito: string;
   esitoSuggerito: string;
   chiusa: boolean;
@@ -211,6 +212,7 @@ export function modelloLoop(
     anomalie,
     cronologia: cronologia(s).map((e) => ({ ora: oraIt(e.ora), testo: e.testo })),
     foto: foto.filter((f) => f.sessioneId === s.id).map((f) => ({ didascalia: f.didascalia, mime: f.mime, dati: f.dati })),
+    diagnosiClaude: s.diagnosiClaude ? { testo: s.diagnosiClaude.testo, ora: `${dataIt(s.diagnosiClaude.ora)} ${oraIt(s.diagnosiClaude.ora)}` } : undefined,
     esito: testoEsitoReport(s.esito),
     esitoSuggerito: testoEsitoReport(esitoSuggerito(anomalie, s)),
     chiusa: !!s.fine,

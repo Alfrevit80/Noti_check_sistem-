@@ -181,6 +181,9 @@ export async function impostaCella(
   await modifica(sessioneId, d, (s) =>
     conLettura(s, letturaId, (l) => {
       const g = { ...l[famiglia] };
+      // toccare una cella da verificare vale come conferma
+      const daVerificare = l.daVerificare ? { ...l.daVerificare, [famiglia]: l.daVerificare[famiglia].filter((n) => n !== indirizzo) } : undefined;
+      l = { ...l, daVerificare };
       const colori = { sensori: { ...l.colori?.sensori }, moduli: { ...l.colori?.moduli } };
       if (sigla) g[indirizzo] = sigla;
       else delete g[indirizzo];
@@ -224,4 +227,40 @@ export async function aggiungiRegistro(sessioneId: string, r: RegistroPol, d: Nc
 
 export async function eliminaRegistro(sessioneId: string, id: string, d: NcsDB = dbApp) {
   await modifica(sessioneId, d, (s) => ({ ...s, registri: (s.registri ?? []).filter((r) => r.id !== id), eventi: s.eventi.filter((e) => e.rif !== id) }));
+}
+
+/** Compila le griglie con quanto letto da una foto (tramite Claude). */
+export async function applicaGrigliaLetta(
+  sessioneId: string,
+  letturaId: string,
+  letta: { sensori: Griglia; moduli: Griglia; dubbi: { sensori: number[]; moduli: number[] } },
+  sostituisci: boolean,
+  d: NcsDB = dbApp,
+) {
+  await modifica(sessioneId, d, (s) =>
+    conLettura(s, letturaId, (l) => {
+      const fam = (f: FamigliaPol) => (Object.keys(letta[f]).length ? (sostituisci ? { ...letta[f] } : { ...l[f], ...letta[f] }) : l[f]);
+      return {
+        ...l,
+        sensori: fam('sensori'),
+        moduli: fam('moduli'),
+        origine: 'foto',
+        daVerificare: { sensori: [...new Set(letta.dubbi.sensori)].sort((a, b) => a - b), moduli: [...new Set(letta.dubbi.moduli)].sort((a, b) => a - b) },
+      };
+    }),
+  );
+}
+
+/** Conferma una cella letta dalla foto senza cambiarla. */
+export async function confermaCella(sessioneId: string, letturaId: string, famiglia: FamigliaPol, indirizzo: number, d: NcsDB = dbApp) {
+  await modifica(sessioneId, d, (s) =>
+    conLettura(s, letturaId, (l) => ({
+      ...l,
+      daVerificare: l.daVerificare ? { ...l.daVerificare, [famiglia]: l.daVerificare[famiglia].filter((n) => n !== indirizzo) } : undefined,
+    })),
+  );
+}
+
+export async function salvaDiagnosiClaude(sessioneId: string, testo: string, d: NcsDB = dbApp) {
+  await modifica(sessioneId, d, (s) => ({ ...s, diagnosiClaude: testo.trim() ? { testo, ora: adesso() } : undefined }));
 }

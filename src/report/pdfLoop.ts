@@ -257,6 +257,12 @@ export function pdfLoop(m: ModelloLoop): TDocumentDefinitions {
   c.push(sezione('Analisi'));
   c.push(anomaliePdf(m.anomalie, 'Nessuna anomalia rilevata.'));
 
+  if (m.diagnosiClaude) {
+    c.push(sezione('Diagnosi assistita (Claude)'));
+    c.push({ text: `Testo generato da Claude sui dati della verifica e incollato dal tecnico il ${m.diagnosiClaude.ora}. Da valutare a cura del tecnico.`, style: 'piccolo', margin: [0, 0, 0, 4] });
+    c.push({ text: m.diagnosiClaude.testo.replace(/\*\*(.+?)\*\*/g, '$1').replace(/^#{1,6}\s*/gm, ''), fontSize: 8.5 });
+  }
+
   c.push(sezione('Cronologia'));
   c.push(
     m.cronologia.length

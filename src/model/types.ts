@@ -177,6 +177,8 @@ export interface LetturaPol {
   /** Dati per dispositivo importati da un file .MNT (con la dipendenza DEP = mappatura fisica). */
   dettagli?: DispositivoMnt[];
   infoFile?: { software?: string; database?: string };
+  /** Celle lette da una foto (tramite Claude) che il tecnico deve ancora confermare. */
+  daVerificare?: { sensori: number[]; moduli: number[] };
   nomeFile?: string;
   nota: string;
 }
@@ -241,6 +243,8 @@ export interface Sessione {
   eventi: Evento[];
   esito: EsitoLoop;
   attivitaDaEseguire: string;
+  /** Risposta di Claude incollata dal tecnico (diagnosi assistita). */
+  diagnosiClaude?: { testo: string; ora: string };
   note: string;
 }
 

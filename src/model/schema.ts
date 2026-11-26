@@ -115,6 +115,7 @@ const letturaSchema = z.object({
     .optional()
     .catch(undefined),
   infoFile: z.object({ software: z.string().optional(), database: z.string().optional() }).optional().catch(undefined),
+  daVerificare: z.object({ sensori: z.array(z.number()).catch([]), moduli: z.array(z.number()).catch([]) }).optional().catch(undefined),
   nomeFile: z.string().optional(),
   nota: str,
 });
@@ -197,6 +198,7 @@ export const sessioneSchema = z.object({
     .catch([]),
   esito: esitoLoop,
   attivitaDaEseguire: str,
+  diagnosiClaude: z.object({ testo: str, ora: str }).optional().catch(undefined),
   note: str,
 });
 

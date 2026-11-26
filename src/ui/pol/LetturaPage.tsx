@@ -13,6 +13,9 @@ import { GrigliaPol } from './GrigliaPol';
 import { Tavolozza, type Pennello } from './Tavolozza';
 import { TabellaDettagli, VistaMappatura } from './VistaMappatura';
 import { analizzaDettagli, analizzaMappa } from '../../analysis/mappa';
+import { CopiaPerClaude } from '../components/CopiaPerClaude';
+import { leggiRispostaGriglia, testoLetturaFoto, type GrigliaLetta } from '../../ai/copiaPerClaude';
+import { applicaGrigliaLetta, confermaCella } from '../../db/sessioni';
 
 export const NOME_RAMO: Record<LetturaPol['ramo'], string> = { A: 'Lato A', B: 'Lato B', chiuso: 'Loop chiuso' };
 
@@ -27,6 +30,9 @@ export function LetturaPage() {
   });
   const [da, setDa] = useState('');
   const [a, setA] = useState('');
+  const [risposta, setRisposta] = useState('');
+  const [letta, setLetta] = useState<GrigliaLetta | null>(null);
+  const [sostituisci, setSostituisci] = useState(true);
 
   if (ctx === undefined) return <Caricamento />;
   if (ctx === null) return <NonTrovato cosa="Verifica" />;
@@ -99,7 +105,22 @@ export function LetturaPage() {
         <p className="tenue istruzione-griglia">
           Scegli la sigla qui sotto e tocca le celle come le vedi sul POL. Toccando una cella già uguale la svuoti.
         </p>
-        <GrigliaPol griglia={g} colori={colori} onTocca={tocca} etichetta={`Griglia ${famiglia}`} />
+        <GrigliaPol griglia={g} colori={colori} onTocca={tocca} etichetta={`Griglia ${famiglia}`} evidenzia={new Set(l.daVerificare?.[famiglia] ?? [])} />
+        {(l.daVerificare?.[famiglia] ?? []).length > 0 && (
+          <div className="da-confermare">
+            <p>
+              <strong>Celle lette dalla foto da confermare</strong> (bordo rosso). Confrontale con il POL: tocca «OK» se la sigla è giusta, oppure
+              correggila toccando la cella con la sigla corretta.
+            </p>
+            <div className="scelte">
+              {l.daVerificare![famiglia].map((n) => (
+                <button key={n} type="button" className="scelta" onClick={() => confermaCella(s.id, lid, famiglia, n)}>
+                  {n}: {g[n] || 'vuota'} — OK
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         <Tavolozza famiglia={famiglia} sigle={impostazioni.sigle} pennello={pennello} onCambia={(p) => setPennelli({ ...pennelli, [famiglia]: p })} />
         <form
           className="riempi"
@@ -116,6 +137,57 @@ export function LetturaPage() {
             con «{pennello.sigla || 'vuoto'}»
           </button>
         </form>
+      </section>
+
+      <section className="scheda">
+        <details>
+          <summary>
+            <strong>Leggi una foto della griglia con Claude</strong>
+          </summary>
+          <ol className="istruzioni">
+            <li>Fotografa la griglia sul display del POL (sensori, moduli o entrambe in due foto).</li>
+            <li>
+              Copia la richiesta, apri Claude, <strong>allega la foto</strong> e incolla la richiesta nella stessa chat.
+            </li>
+            <li>Copia la risposta di Claude e incollala qui sotto.</li>
+          </ol>
+          <CopiaPerClaude testo={() => testoLetturaFoto('entrambe')} etichetta="Copia la richiesta per Claude" dopo="Ricordati di allegare la foto." />
+          <label className="campo">
+            <span className="campo-etichetta">Risposta di Claude</span>
+            <textarea rows={6} value={risposta} onChange={(e) => { setRisposta(e.target.value); setLetta(null); }} placeholder={'SENSORI\n1-4 OT\n…'} />
+          </label>
+          <div className="azioni">
+            <button type="button" disabled={!risposta.trim()} onClick={() => setLetta(leggiRispostaGriglia(risposta, famiglia))}>
+              Controlla
+            </button>
+          </div>
+          {letta && (
+            <div className="scheda evidenza">
+              <p>
+                Letti {indirizzi(letta.sensori).length} sensori e {indirizzi(letta.moduli).length} moduli
+                {letta.dubbi.sensori.length + letta.dubbi.moduli.length > 0 && `, ${letta.dubbi.sensori.length + letta.dubbi.moduli.length} celle dubbie da confermare`}.
+              </p>
+              {letta.avvisi.length > 0 && <p className="attenzione-box">{letta.avvisi.slice(0, 5).join(' · ')}</p>}
+              <label className="spunta">
+                <input type="checkbox" checked={sostituisci} onChange={(e) => setSostituisci(e.target.checked)} />
+                Sostituisci le griglie lette (altrimenti aggiunge alle celle già presenti)
+              </label>
+              <div className="azioni">
+                <button
+                  className="primario"
+                  disabled={!indirizzi(letta.sensori).length && !indirizzi(letta.moduli).length}
+                  onClick={async () => {
+                    await applicaGrigliaLetta(s.id, lid, letta, sostituisci);
+                    setLetta(null);
+                    setRisposta('');
+                  }}
+                >
+                  Compila la griglia
+                </button>
+              </div>
+            </div>
+          )}
+        </details>
       </section>
 
       <section className="scheda">

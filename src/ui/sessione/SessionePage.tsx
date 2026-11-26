@@ -13,6 +13,10 @@ import { EditorRiconoscimento } from './EditorRiconoscimento';
 import { passoDaRiprendere } from './GuidaPage';
 import { useSessione } from './useSessione';
 import { PannelloPol } from '../pol/PannelloPol';
+import { CopiaPerClaude } from '../components/CopiaPerClaude';
+import { testoDiagnosi } from '../../ai/copiaPerClaude';
+import { CampoTesto } from '../components/Campi';
+import { salvaDiagnosiClaude } from '../../db/sessioni';
 import { FotoSessione } from './FotoSessione';
 import { PulsantePdf } from './PulsantePdf';
 import { db } from '../../db/db';
@@ -103,6 +107,23 @@ export function SessionePage() {
       <section className="scheda">
         <h2>Analisi</h2>
         <ElencoAnomalie anomalie={anomalie} vuoto={mancanti.length ? 'Nessuna anomalia nelle misure inserite finora.' : 'Nessuna anomalia rilevata.'} />
+      </section>
+
+      <section className="scheda">
+        <h2>Chiedi a Claude</h2>
+        <p className="tenue">
+          Copia i dati della verifica (senza nome del cliente né indirizzo) e incollali nella chat di Claude: usi il tuo abbonamento, senza costi
+          aggiuntivi. Poi incolla qui sotto la risposta: viene salvata nella verifica e inserita nel rapportino.
+        </p>
+        <CopiaPerClaude testo={() => testoDiagnosi(s, loop, centrale, impostazioni)} />
+        <CampoTesto
+          etichetta="Diagnosi di Claude (incolla qui la risposta)"
+          multiriga
+          valore={s.diagnosiClaude?.testo ?? ''}
+          onSalva={(v) => salvaDiagnosiClaude(s.id, v)}
+          className="diagnosi-claude"
+        />
+        {s.diagnosiClaude && <p className="tenue">Salvata il {formattaOra(s.diagnosiClaude.ora)}.</p>}
       </section>
 
       <div className="due-colonne">
