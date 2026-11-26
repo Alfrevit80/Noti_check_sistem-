@@ -17,6 +17,18 @@ npm run build     # build di produzione in dist/
 npm run preview   # prova della build (service worker incluso)
 ```
 
+## Sicurezza
+
+- Al primo avvio si sceglie una **password di accesso**. Tutti i dati salvati sul dispositivo
+  (impianti, misure, foto, impostazioni, chiave API) sono cifrati con XSalsa20-Poly1305 (tweetnacl);
+  la chiave dei dati è protetta dalla password tramite PBKDF2-SHA256 (600.000 iterazioni, WebCrypto).
+  In chiaro su disco restano solo identificativi casuali e date usati negli indici.
+- La cifratura è un middleware Dexie (`src/db/cifratura.ts`) al livello più basso: il resto del codice lavora in chiaro.
+- Blocco manuale (lucchetto in alto) e automatico dopo N minuti di inattività (Impostazioni → Sicurezza).
+- **Password dimenticata = dati non recuperabili** (si possono solo cancellare e reimportare dai file esportati).
+- I file di progetto esportati sono **sempre cifrati** con una password scelta all'esportazione;
+  il nome del file non contiene il nome del cliente.
+
 ## Struttura
 
 | Cartella | Contenuto |
@@ -24,6 +36,7 @@ npm run preview   # prova della build (service worker incluso)
 | `src/model/` | Tipi TypeScript del modello dati e schemi Zod per validare i file importati |
 | `src/db/` | Database Dexie (IndexedDB), operazioni CRUD, export/import JSON |
 | `src/analysis/` | Regole di analisi **pure** (nessuna dipendenza da React), testate in `tests/` |
+| `src/security/` | Cifratura, password, sblocco/blocco |
 | `src/settings/` | Valori predefiniti: soglie, modelli di centrale, checklist di rete |
 | `src/ui/` | Pagine e componenti React |
 | `tests/` | Test Vitest |

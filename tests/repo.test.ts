@@ -1,6 +1,6 @@
-import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { NcsDB } from '../src/db/db';
+import type { NcsDB } from '../src/db/db';
+import { dbDiTest } from './helpers';
 import {
   aggiornaCentrale, creaCentrale, creaImpianto, creaSessione, eliminaImpianto,
   leggiImpostazioni, numeroLoopTotali, salvaImpostazioni, schedaDelLoop,
@@ -8,8 +8,7 @@ import {
 
 let d: NcsDB;
 beforeEach(async () => {
-  d = new NcsDB('test-' + Math.random());
-  await d.open();
+  d = await dbDiTest();
 });
 
 describe('centrali e loop', () => {

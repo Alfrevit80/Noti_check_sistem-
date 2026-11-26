@@ -1,9 +1,10 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useRef, useState } from 'react';
+import { useRef, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { db } from '../../db/db';
 import { creaImpianto } from '../../db/repo';
-import { ErroreImport, importaProgetto, leggiFileProgetto, type ModoImport } from '../../db/exportImport';
+import { ErroreImport, decifraFile, importaProgetto, leggiFile, type FileCifrato, type ModoImport } from '../../db/exportImport';
+import { CampoPassword } from '../Accesso';
 import type { ProgettoFile } from '../../model/schema';
 import { formattaData } from '../etichette';
 
@@ -19,6 +20,9 @@ export function ImpiantiPage() {
 
   const fileRef = useRef<HTMLInputElement>(null);
   const [daImportare, setDaImportare] = useState<{ p: ProgettoFile; esiste: boolean } | null>(null);
+  const [daDecifrare, setDaDecifrare] = useState<FileCifrato | null>(null);
+  const [passwordFile, setPasswordFile] = useState('');
+  const [attesa, setAttesa] = useState(false);
   const [errore, setErrore] = useState('');
 
   async function nuovo() {
@@ -29,15 +33,39 @@ export function ImpiantiPage() {
   async function scegliFile(f: File | undefined) {
     setErrore('');
     if (!f) return;
+    setDaImportare(null);
+    setDaDecifrare(null);
     try {
-      const p = leggiFileProgetto(await f.text());
-      const esiste = !!(await db.impianti.get(p.impianto.id));
-      setDaImportare({ p, esiste });
+      const letto = leggiFile(await f.text());
+      if (letto.cifrato) {
+        setPasswordFile('');
+        setDaDecifrare(letto.pacco);
+      } else await preparaImport(letto.progetto);
     } catch (e) {
       setErrore(e instanceof ErroreImport ? e.message : `Errore nella lettura del file: ${String(e)}`);
     } finally {
       if (fileRef.current) fileRef.current.value = '';
     }
+  }
+
+  async function preparaImport(p: ProgettoFile) {
+    const esiste = !!(await db.impianti.get(p.impianto.id));
+    setDaImportare({ p, esiste });
+  }
+
+  async function decifra(e: FormEvent) {
+    e.preventDefault();
+    if (!daDecifrare) return;
+    setErrore('');
+    setAttesa(true);
+    try {
+      const p = await decifraFile(daDecifrare, passwordFile);
+      setDaDecifrare(null);
+      await preparaImport(p);
+    } catch (err) {
+      setErrore(err instanceof ErroreImport ? err.message : String(err));
+    }
+    setAttesa(false);
   }
 
   async function conferma(modo: ModoImport) {
@@ -76,6 +104,22 @@ export function ImpiantiPage() {
       />
 
       {errore && <p className="errore-box">{errore}</p>}
+
+      {daDecifrare && (
+        <form className="scheda evidenza" onSubmit={decifra}>
+          <h2>File cifrato</h2>
+          <p>Inserisci la password scelta quando il file è stato esportato.</p>
+          <CampoPassword id="password-file" etichetta="Password del file" valore={passwordFile} onCambia={setPasswordFile} autoFocus />
+          <div className="azioni">
+            <button type="submit" className="primario" disabled={!passwordFile || attesa}>
+              {attesa ? 'Decifratura…' : 'Apri file'}
+            </button>
+            <button type="button" onClick={() => setDaDecifrare(null)}>
+              Annulla
+            </button>
+          </div>
+        </form>
+      )}
 
       {daImportare && (
         <div className="scheda evidenza">

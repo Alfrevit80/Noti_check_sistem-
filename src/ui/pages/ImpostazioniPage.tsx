@@ -1,5 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
+import { cambiaPassword, impostaBloccoMinuti, leggiCassaforte } from '../../security/sessione';
+import { CampoPassword, bloccaApp } from '../Accesso';
 import { leggiImpostazioni, salvaImpostazioni } from '../../db/repo';
 import type { ProfiloCentrale, RigaSezione, Soglie } from '../../model/types';
 import { SOGLIE_PREDEFINITE } from '../../settings/defaults';
@@ -27,6 +29,8 @@ export function ImpostazioniPage() {
   return (
     <>
       <h1>Impostazioni</h1>
+
+      <Sicurezza />
 
       <section className="scheda">
         <h2>Generali</h2>
@@ -198,5 +202,77 @@ function EditorLista({ etichetta, voci, onSalva }: { etichetta: string; voci: st
         <button type="submit">Aggiungi</button>
       </form>
     </div>
+  );
+}
+
+function Sicurezza() {
+  const cassaforte = useLiveQuery(() => leggiCassaforte(), []);
+  const [vecchia, setVecchia] = useState('');
+  const [nuova, setNuova] = useState('');
+  const [conferma, setConferma] = useState('');
+  const [esito, setEsito] = useState<{ ok: boolean; testo: string } | null>(null);
+  const [attesa, setAttesa] = useState(false);
+
+  async function cambia(e: FormEvent) {
+    e.preventDefault();
+    setEsito(null);
+    if (nuova !== conferma) return setEsito({ ok: false, testo: 'Le due password nuove non coincidono.' });
+    setAttesa(true);
+    try {
+      const ok = await cambiaPassword(vecchia, nuova);
+      setEsito(ok ? { ok: true, testo: 'Password cambiata.' } : { ok: false, testo: 'La password attuale è errata.' });
+      if (ok) {
+        setVecchia('');
+        setNuova('');
+        setConferma('');
+      }
+    } catch (err) {
+      setEsito({ ok: false, testo: err instanceof Error ? err.message : String(err) });
+    }
+    setAttesa(false);
+  }
+
+  async function setMinuti(v: number | undefined) {
+    const m = Math.max(0, Math.round(v ?? 15));
+    await impostaBloccoMinuti(m);
+    window.dispatchEvent(new CustomEvent('ncs-blocco-minuti', { detail: m }));
+  }
+
+  return (
+    <section className="scheda">
+      <div className="titolo-riga">
+        <h2>Sicurezza</h2>
+        <button onClick={bloccaApp}>Blocca ora</button>
+      </div>
+      <p className="tenue">
+        I dati di questo dispositivo sono cifrati con la password di accesso. I file esportati sono cifrati con la password
+        scelta al momento dell'esportazione.
+      </p>
+      <div className="griglia-campi">
+        <CampoNumero
+          etichetta="Blocco automatico dopo"
+          unita="min"
+          intero
+          valore={cassaforte?.bloccoMinuti}
+          onSalva={setMinuti}
+          aiuto="Minuti senza usare l'app. 0 = mai."
+        />
+      </div>
+      <h3>Cambia password</h3>
+      <form onSubmit={cambia} className="griglia-campi">
+        <input type="text" name="username" autoComplete="username" value="Notifier Check System" readOnly hidden />
+        <CampoPassword id="pw-attuale" etichetta="Password attuale" valore={vecchia} onCambia={setVecchia} />
+        <CampoPassword id="pw-nuova" etichetta="Nuova password" valore={nuova} onCambia={setNuova} nuova />
+        <CampoPassword id="pw-conferma" etichetta="Ripeti la nuova password" valore={conferma} onCambia={setConferma} nuova />
+        <div className="campo largo">
+          {esito && <p className={esito.ok ? 'ok-box' : 'errore-box'}>{esito.testo}</p>}
+          <div className="azioni">
+            <button type="submit" className="primario" disabled={attesa || !vecchia || !nuova}>
+              {attesa ? 'Attendere…' : 'Cambia password'}
+            </button>
+          </div>
+        </div>
+      </form>
+    </section>
   );
 }

@@ -188,7 +188,7 @@ export interface Foto {
   didascalia: string;
   ora: string;
   mime: string;
-  dati: Blob;
+  dati: Uint8Array; // byte dell'immagine (cifrati su disco insieme al resto del record)
 }
 
 // ───────────────────────── Impostazioni ─────────────────────────

@@ -181,3 +181,24 @@ a.voce:hover { border-color: var(--primario); }
 .tabella th, .tabella td { border-bottom: 1px solid var(--bordo); padding: 0.3rem; text-align: left; }
 .tabella th { font-size: 0.85rem; color: var(--tenue); }
 .scorrimento-x { overflow-x: auto; }
+
+.barra nav { align-items: center; }
+.barra .blocca { min-height: 38px; padding: 0.35rem 0.7rem; background: #0003; border-color: transparent; color: inherit; }
+@media (max-width: 420px) { .barra .blocca span { display: none; } }
+
+.accesso { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+.accesso-scheda { width: 100%; max-width: 420px; background: var(--superficie); border: 1px solid var(--bordo); border-radius: 14px; padding: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem; }
+.accesso-marchio { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; text-align: center; }
+.accesso-marchio img { border-radius: 12px; }
+.accesso-marchio h1 { margin: 0; font-size: 1.3rem; }
+.accesso h2 { margin: 0.5rem 0 0; }
+.accesso p { margin: 0; }
+.accesso-form { display: flex; flex-direction: column; gap: 0.85rem; }
+.campo-password { display: flex; gap: 0.4rem; }
+.spunta span { line-height: 1.35; }
+button.link { background: none; border: 0; color: var(--link); text-decoration: underline; min-height: 40px; align-self: center; }
+
+.dialogo-sfondo { position: fixed; inset: 0; background: #0008; display: flex; align-items: center; justify-content: center; padding: 1rem; z-index: 50; }
+.dialogo { width: 100%; max-width: 440px; background: var(--superficie); border-radius: 14px; padding: 1.25rem; display: flex; flex-direction: column; gap: 0.75rem; }
+.dialogo h2 { margin: 0; }
+.dialogo p { margin: 0; }

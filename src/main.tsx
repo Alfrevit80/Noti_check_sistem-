@@ -9,6 +9,7 @@ import { CentralePage } from './ui/pages/CentralePage';
 import { RetePage } from './ui/pages/RetePage';
 import { LoopPage } from './ui/pages/LoopPage';
 import { ImpostazioniPage } from './ui/pages/ImpostazioniPage';
+import { Accesso } from './ui/Accesso';
 import './styles.css';
 
 registerSW({ immediate: true });
@@ -17,6 +18,7 @@ navigator.storage?.persist?.().catch(() => undefined);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
+    <Accesso>
     <HashRouter>
       <Layout>
         <Routes>
@@ -30,5 +32,6 @@ createRoot(document.getElementById('root')!).render(
         </Routes>
       </Layout>
     </HashRouter>
+    </Accesso>
   </StrictMode>,
 );

@@ -1,15 +1,15 @@
-import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { NcsDB } from '../src/db/db';
+import type { NcsDB } from '../src/db/db';
+import { dbDiTest, ITER_TEST } from './helpers';
 import { creaCentrale, creaImpianto, creaSessione, nuovaRete, salvaRete } from '../src/db/repo';
 import {
-  ErroreImport, blobToDataUrl, dataUrlToBlob, esportaProgetto, importaProgetto, leggiFileProgetto, nomeFileExport,
+  ErroreImport, bytesToDataUrl, dataUrlToBytes, decifraFile, esportaFileCifrato, esportaProgetto, importaProgetto,
+  leggiFile, leggiFileProgetto, nomeFileExport,
 } from '../src/db/exportImport';
 
 let d: NcsDB;
 beforeEach(async () => {
-  d = new NcsDB('test-' + Math.random());
-  await d.open();
+  d = await dbDiTest();
 });
 
 async function impiantoCompleto() {
@@ -22,17 +22,18 @@ async function impiantoCompleto() {
   await d.sessioni.update(s.id, { misure: [{ id: 'm1', ramo: 'A', tipo: 'pT', valore: 'OL', ora: '', nota: '' }] });
   await d.foto.add({
     id: 'f1', impiantoId: imp.id, sessioneId: s.id, didascalia: 'Sommario', ora: '', mime: 'image/png',
-    dati: new Blob([new Uint8Array([1, 2, 3, 250])], { type: 'image/png' }),
+    dati: new Uint8Array([1, 2, 3, 250]),
   });
   return imp;
 }
 
-describe('blob ↔ data URL', () => {
-  it('andata e ritorno', async () => {
-    const url = await blobToDataUrl(new Blob([new Uint8Array([0, 255, 10])], { type: 'image/jpeg' }));
+describe('byte ↔ data URL', () => {
+  it('andata e ritorno', () => {
+    const url = bytesToDataUrl(new Uint8Array([0, 255, 10]), 'image/jpeg');
     expect(url.startsWith('data:image/jpeg;base64,')).toBe(true);
-    const b = dataUrlToBlob(url);
-    expect(Array.from(new Uint8Array(await b.arrayBuffer()))).toEqual([0, 255, 10]);
+    const r = dataUrlToBytes(url);
+    expect(r.mime).toBe('image/jpeg');
+    expect(Array.from(r.dati)).toEqual([0, 255, 10]);
   });
 });
 
@@ -42,7 +43,7 @@ describe('export/import progetto', () => {
     const file = await esportaProgetto(imp.id, d);
     const testo = JSON.stringify(file);
 
-    const altro = new NcsDB('altro-' + Math.random());
+    const altro = await dbDiTest();
     const p = leggiFileProgetto(testo);
     const nuovoId = await importaProgetto(p, 'copia', altro);
     expect(nuovoId).not.toBe(imp.id);
@@ -57,7 +58,7 @@ describe('export/import progetto', () => {
     expect([...rete!.centraliCollegate].sort()).toEqual(idCentrali);
     const f = (await altro.foto.toArray())[0];
     expect(f.sessioneId).toBe(s.id);
-    expect(Array.from(new Uint8Array(await f.dati.arrayBuffer()))).toEqual([1, 2, 3, 250]);
+    expect(Array.from(f.dati)).toEqual([1, 2, 3, 250]);
   });
 
   it('sostituisci rimpiazza l\'impianto esistente senza duplicare', async () => {
@@ -88,8 +89,31 @@ describe('export/import progetto', () => {
     expect(p.loops).toEqual([]);
   });
 
-  it('nome file pulito', () => {
-    expect(nomeFileExport({ impianto: { cliente: 'Città & Co.', nomeImpianto: 'Pad. B', data: '2026-11-26' } as never }))
-      .toBe('NCS_Citta-Co-Pad-B_2026-11-26.json');
+  it('il nome del file non contiene il nome del cliente', () => {
+    expect(nomeFileExport({ impianto: { id: 'ab12-cd34', cliente: 'Città & Co.', nomeImpianto: 'Pad. B', data: '2026-11-26' } as never }))
+      .toBe('NCS_2026-11-26_AB12CD.json');
+  });
+});
+
+describe('file esportato cifrato', () => {
+  it('senza password non si legge nulla; con la password giusta si reimporta', async () => {
+    const imp = await impiantoCompleto();
+    const { testo, nome } = await esportaFileCifrato(imp.id, 'segreta-123', d, ITER_TEST);
+    expect(nome).not.toContain('Ospedale');
+    expect(testo).not.toContain('Ospedale');
+    expect(testo).not.toContain('Padiglione');
+    const letto = leggiFile(testo);
+    expect(letto.cifrato).toBe(true);
+    if (!letto.cifrato) return;
+    await expect(decifraFile(letto.pacco, 'sbagliata')).rejects.toThrow(/Password errata/);
+    const p = await decifraFile(letto.pacco, 'segreta-123');
+    expect(p.impianto.cliente).toBe('Ospedale Città');
+    expect(p.foto[0].dataUrl.startsWith('data:image/png;base64,')).toBe(true);
+  });
+
+  it('i file in chiaro delle versioni precedenti si importano ancora', async () => {
+    const imp = await impiantoCompleto();
+    const letto = leggiFile(JSON.stringify(await esportaProgetto(imp.id, d)));
+    expect(letto.cifrato).toBe(false);
   });
 });
