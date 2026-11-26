@@ -12,6 +12,9 @@ export const RHO_RAME = 0.0195;
 /** Resistenza attesa di un conduttore lungo L metri con sezione S mm². */
 export const resistenzaConduttore = (lunghezzaM: number, sezioneMm2: number) => (RHO_RAME * lunghezzaM) / sezioneMm2;
 
+/** Lunghezza stimata del loop (m) dalla resistenza di un conduttore, arrotondata a 10 m. */
+export const stimaLunghezza = (rConduttoreOhm: number, sezioneMm2: number) => Math.round((rConduttoreOhm * sezioneMm2) / RHO_RAME / 10) * 10;
+
 /** Lunghezza massima del loop con questa sezione perché ogni conduttore resti entro la metà della resistenza massima. */
 export const lunghezzaMassima = (sezioneMm2: number, rLoopMaxOhm: number) => ((rLoopMaxOhm / 2) * sezioneMm2) / RHO_RAME;
 

@@ -6,6 +6,7 @@ import { TESTO_VALUTAZIONE, valutaMisura } from '../../analysis/valutazione';
 import { registraMisura } from '../../db/sessioni';
 import { leggiNumero } from '../components/Campi';
 import { formattaOra } from '../etichette';
+import { ComeMisurare } from './ComeMisurare';
 
 export interface Domanda {
   ramo: RamoMisura;
@@ -99,6 +100,7 @@ export function SequenzaMisure(props: {
           <h3>{def.descrizione}{d.ramo !== 'loop' ? ` — ramo ${d.ramo}` : ''}</h3>
           <p className="tenue">{def.istruzioni}</p>
         </div>
+        <ComeMisurare tipo={d.tipo} soglie={soglie} />
         {precedente && (
           <p className="precedente">
             Già misurato: <strong>{formattaValore(precedente.valore, precedente.valore === 'OL' ? undefined : def.unita)}</strong> alle{' '}

@@ -5,7 +5,7 @@ import type { Sessione, Sintomo, Soglie } from '../../model/types';
 import { TIPI_ISOLAMENTO, ultimaMisura } from '../../analysis/misure';
 import { analizzaSessione, esitoSuggerito } from '../../analysis/sessione';
 import { tensioneResiduaAlta } from '../../analysis/voltages';
-import { lunghezzaMassima, resistenzaConduttore, sezioneMinima } from '../../analysis/loopResistance';
+import { lunghezzaMassima, resistenzaConduttore, sezioneMinima, stimaLunghezza } from '../../analysis/loopResistance';
 import { aggiornaSessione, chiudiSessione, impostaSintomo, salvaCavo } from '../../db/sessioni';
 import { Briciole, Caricamento, NonTrovato } from '../components/Layout';
 import { CampoNumero, CampoScelta, CampoTesto } from '../components/Campi';
@@ -14,6 +14,7 @@ import { ESITI_LOOP, testoEsito } from '../etichette';
 import { SequenzaMisure, type Domanda } from './SequenzaMisure';
 import { EditorRiconoscimento } from './EditorRiconoscimento';
 import { useSessione } from './useSessione';
+import { SuggerimentiPasso } from './ComeMisurare';
 import type { CtxSessione } from './useSessione';
 
 interface Passo {
@@ -110,7 +111,12 @@ function ContenutoPasso({ passo, ctx, q, onAvanti }: { passo: string; ctx: CtxSe
   const soglie = impostazioni.soglie;
   switch (passo) {
     case 'sintomo':
-      return <PassoSintomo s={s} onAvanti={onAvanti} />;
+      return (
+        <>
+          <SuggerimentiPasso passo="sintomo" />
+          <PassoSintomo s={s} onAvanti={onAvanti} />
+        </>
+      );
     case 'scollegamento':
       return (
         <>
@@ -158,13 +164,21 @@ function ContenutoPasso({ passo, ctx, q, onAvanti }: { passo: string; ctx: CtxSe
         </>
       );
     case 'cavo':
-      return <PassoCavo s={s} soglie={soglie} />;
+      return (
+        <>
+          <SuggerimentiPasso passo="cavo" />
+          <PassoCavo s={s} soglie={soglie} />
+        </>
+      );
     case 'pol':
       return (
+        <>
+        <SuggerimentiPasso passo="pol" />
         <p className="attenzione-box">
           Le griglie del POL-200-TS (lato A e lato B, sensori e moduli) e il confronto A/B arrivano nella <strong>fase 3</strong>.
           Per ora puoi passare al passo successivo.
         </p>
+        </>
       );
     case 'ritorno':
       return (
@@ -187,7 +201,12 @@ function ContenutoPasso({ passo, ctx, q, onAvanti }: { passo: string; ctx: CtxSe
         </>
       );
     case 'riconoscimento':
-      return <EditorRiconoscimento sessione={s} />;
+      return (
+        <>
+          <SuggerimentiPasso passo="riconoscimento" />
+          <EditorRiconoscimento sessione={s} />
+        </>
+      );
     case 'esito':
       return <PassoEsito ctx={ctx} />;
   }
@@ -278,6 +297,20 @@ function PassoCavo({ s, soglie }: { s: Sessione; soglie: Soglie }) {
         <CampoNumero etichetta="Sezione" unita="mm²" valore={c.sezioneMm2} onSalva={(v) => salva({ sezioneMm2: v })} />
         <CampoTesto etichetta="Tipo di cavo" valore={c.tipo} onSalva={(v) => salva({ tipo: v })} placeholder="es. 2x1,5 schermato twistato" />
       </div>
+      {(() => {
+        const rN = ultimaMisura(s.misure, 'loop', 'rN')?.valore;
+        if (typeof rN !== 'number' || !c.sezioneMm2) return null;
+        const stima = stimaLunghezza(rN, c.sezioneMm2);
+        return (
+          <p className="stima">
+            Dalla resistenza del negativo ({String(rN).replace('.', ',')} Ω) con {String(c.sezioneMm2).replace('.', ',')} mm² il loop è lungo circa{' '}
+            <strong>{stima} m</strong>.{' '}
+            <button type="button" className="piccolo" onClick={() => salva({ lunghezzaM: stima })}>
+              Stima: usa {stima} m
+            </button>
+          </p>
+        );
+      })()}
       <div className="scelte">
         {SEZIONI_COMUNI.map((x) => (
           <button key={x} type="button" className={c.sezioneMm2 === x ? 'scelta attiva' : 'scelta'} onClick={() => salva({ sezioneMm2: x })}>
