@@ -180,3 +180,4 @@ a.voce:hover { border-color: var(--primario); }
 .tabella { width: 100%; border-collapse: collapse; margin-bottom: 0.5rem; }
 .tabella th, .tabella td { border-bottom: 1px solid var(--bordo); padding: 0.3rem; text-align: left; }
 .tabella th { font-size: 0.85rem; color: var(--tenue); }
+.scorrimento-x { overflow-x: auto; }

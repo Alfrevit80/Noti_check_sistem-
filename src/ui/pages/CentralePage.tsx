@@ -6,6 +6,8 @@ import type { Centrale, Espansione } from '../../model/types';
 import { Briciole, Caricamento, NonTrovato } from '../components/Layout';
 import { CampoNumero, CampoScelta, CampoTesto } from '../components/Campi';
 import { testoEsito } from '../etichette';
+import { analizzaCentrale } from '../../analysis/centrale';
+import { ElencoAnomalie } from '../components/ElencoAnomalie';
 
 export function CentralePage() {
   const { id = '' } = useParams();
@@ -23,6 +25,8 @@ export function CentralePage() {
     ? impostazioni.modelliCentrale
     : [c.modello, ...impostazioni.modelliCentrale];
   const totali = numeroLoopTotali(c);
+  const profilo = impostazioni.profiliCentrale[c.modello];
+  const anomalie = analizzaCentrale(c, profilo);
 
   const setEsp = (i: number, patch: Partial<Espansione>) =>
     salva({ espansioni: c.espansioni.map((e, j) => (j === i ? { ...e, ...patch } : e)) });
@@ -55,7 +59,7 @@ export function CentralePage() {
         <h2>Dati centrale</h2>
         <div className="griglia-campi">
           <CampoTesto etichetta="Nome / posizione" valore={c.nome} onSalva={(v) => salva({ nome: v })} />
-          <CampoScelta etichetta="Modello" valore={c.modello} opzioni={modelli} onSalva={(v) => salva({ modello: v })} aiuto="La lista si modifica nelle Impostazioni" />
+          <CampoScelta etichetta="Modello" valore={c.modello} opzioni={modelli} onSalva={(v) => salva({ modello: v, loopBase: impostazioni.profiliCentrale[v]?.loopBase ?? c.loopBase })} aiuto="La lista si modifica nelle Impostazioni" />
           <CampoTesto etichetta="N. CPU / indirizzo di rete" valore={c.nodoCpu} onSalva={(v) => salva({ nodoCpu: v })} />
           <CampoTesto etichetta="Versione firmware" valore={c.firmware} onSalva={(v) => salva({ firmware: v })} />
           <CampoNumero etichetta="Loop sulla scheda base" intero valore={c.loopBase} onSalva={(v) => salva({ loopBase: Math.max(0, Math.round(v ?? 0)) })} />
@@ -86,7 +90,11 @@ export function CentralePage() {
             </button>
           </div>
         ))}
-        <p className="tenue">Totale loop: {totali}</p>
+        <p className="tenue">
+          Totale loop: {totali}
+          {profilo && ` (la ${c.modello} gestisce fino a ${profilo.loopMax} loop)`}
+        </p>
+        {anomalie.length > 0 && <ElencoAnomalie anomalie={anomalie} />}
       </section>
 
       <section className="scheda">

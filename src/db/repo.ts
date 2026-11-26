@@ -21,6 +21,7 @@ export async function leggiImpostazioni(d: NcsDB = dbApp): Promise<Impostazioni>
     ...IMPOSTAZIONI_PREDEFINITE,
     ...s,
     soglie: { ...SOGLIE_PREDEFINITE, ...s?.soglie },
+    profiliCentrale: { ...IMPOSTAZIONI_PREDEFINITE.profiliCentrale, ...s?.profiliCentrale },
     id: 'app',
   };
 }
@@ -94,13 +95,14 @@ export function schedaDelLoop(c: Pick<Centrale, 'loopBase' | 'espansioni'>, n: n
 export async function creaCentrale(impiantoId: string, dati: Partial<Centrale> = {}, d: NcsDB = dbApp) {
   const imp = await leggiImpostazioni(d);
   const n = await d.centrali.where('impiantoId').equals(impiantoId).count();
+  const modello = dati.modello ?? imp.modelliCentrale[0] ?? 'AM-8200N';
   const c: Centrale = {
     id: nuovoId(),
     impiantoId,
     nome: `Centrale ${n + 1}`,
-    modello: imp.modelliCentrale[0] ?? 'AM-8200N',
+    modello,
     nodoCpu: String(n + 1),
-    loopBase: 1,
+    loopBase: imp.profiliCentrale[modello]?.loopBase ?? 2, // AM-8200N: 2 loop sulla scheda madre
     espansioni: [],
     firmware: '',
     note: '',

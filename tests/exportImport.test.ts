@@ -15,7 +15,7 @@ beforeEach(async () => {
 async function impiantoCompleto() {
   const imp = await creaImpianto({ cliente: 'Ospedale Città', nomeImpianto: 'Padiglione B' }, d);
   const c1 = await creaCentrale(imp.id, { loopBase: 2 }, d);
-  const c2 = await creaCentrale(imp.id, {}, d);
+  const c2 = await creaCentrale(imp.id, { loopBase: 1 }, d);
   await salvaRete({ ...nuovaRete(imp.id), centraliCollegate: [c1.id, c2.id] }, d);
   const loop = (await d.loops.where('centraleId').equals(c1.id).first())!;
   const s = await creaSessione(loop.id, d);

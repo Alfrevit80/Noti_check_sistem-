@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useState } from 'react';
 import { leggiImpostazioni, salvaImpostazioni } from '../../db/repo';
-import type { RigaSezione, Soglie } from '../../model/types';
+import type { ProfiloCentrale, RigaSezione, Soglie } from '../../model/types';
 import { SOGLIE_PREDEFINITE } from '../../settings/defaults';
 import { CampoNumero, CampoTesto } from '../components/Campi';
 import { Caricamento } from '../components/Layout';
@@ -41,6 +41,43 @@ export function ImpostazioniPage() {
         <div className="griglia-campi">
           <EditorLista etichetta="Modelli di centrale (il primo è il predefinito)" voci={s.modelliCentrale} onSalva={(v) => salvaImpostazioni({ modelliCentrale: v })} />
           <EditorLista etichetta="Schede di espansione loop" voci={s.modelliEspansione} onSalva={(v) => salvaImpostazioni({ modelliEspansione: v })} />
+        </div>
+        <h3>Loop per modello</h3>
+        <p className="tenue">Usati come valore iniziale per le nuove centrali e per segnalare configurazioni oltre il massimo. Lascia vuoto se non noto.</p>
+        <div className="scorrimento-x">
+          <table className="tabella">
+            <thead>
+              <tr>
+                <th>Modello</th>
+                <th>Loop scheda madre</th>
+                <th>Loop massimi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {s.modelliCentrale.map((m) => {
+                const p = s.profiliCentrale[m];
+                const set = (patch: Partial<ProfiloCentrale>) => {
+                  const nuovo = { loopBase: p?.loopBase ?? 1, loopMax: p?.loopMax ?? 1, ...patch };
+                  const profili = { ...s.profiliCentrale };
+                  if (patch.loopBase === undefined && 'loopBase' in patch) delete profili[m];
+                  else if (patch.loopMax === undefined && 'loopMax' in patch) delete profili[m];
+                  else profili[m] = nuovo;
+                  salvaImpostazioni({ profiliCentrale: profili });
+                };
+                return (
+                  <tr key={m}>
+                    <td>{m}</td>
+                    <td>
+                      <CampoNumero etichetta="" intero valore={p?.loopBase} onSalva={(v) => set({ loopBase: v })} />
+                    </td>
+                    <td>
+                      <CampoNumero etichetta="" intero valore={p?.loopMax} onSalva={(v) => set({ loopMax: v })} />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </section>
 

@@ -209,11 +209,18 @@ export interface Soglie {
   tabellaSezioni: RigaSezione[];
 }
 
+/** Configurazione tipica di un modello di centrale (per i valori predefiniti e i controlli). */
+export interface ProfiloCentrale {
+  loopBase: number; // loop sulla scheda madre
+  loopMax: number; // loop massimi con le espansioni
+}
+
 export interface Impostazioni {
   id: 'app';
   tecnicoPredefinito: string;
   strumentoPredefinito: string;
   modelliCentrale: string[];
+  profiliCentrale: Record<string, ProfiloCentrale>; // chiave = modello
   modelliEspansione: string[];
   soglie: Soglie;
   claudeApiKey: string;

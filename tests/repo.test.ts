@@ -53,3 +53,13 @@ describe('impostazioni', () => {
     expect((await leggiImpostazioni(d)).soglie.rLoopMaxOhm).toBe(35);
   });
 });
+
+describe('profili centrale', () => {
+  it('una nuova AM-8200N nasce con 2 loop', async () => {
+    const imp = await creaImpianto({}, d);
+    const c = await creaCentrale(imp.id, {}, d);
+    expect(c.modello).toBe('AM-8200N');
+    expect(c.loopBase).toBe(2);
+    expect(await d.loops.where('centraleId').equals(c.id).count()).toBe(2);
+  });
+});

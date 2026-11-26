@@ -23,6 +23,11 @@ export const IMPOSTAZIONI_PREDEFINITE: Impostazioni = {
   tecnicoPredefinito: '',
   strumentoPredefinito: 'POL-200-TS',
   modelliCentrale: ['AM-8200N', 'AM-8200', 'AM-6000N', 'AM-2000N', 'AM-4000'],
+  // Solo i modelli di cui conosciamo la configurazione; gli altri si aggiungono nelle Impostazioni.
+  profiliCentrale: {
+    'AM-8200N': { loopBase: 2, loopMax: 4 },
+    'AM-8200': { loopBase: 2, loopMax: 4 },
+  },
   modelliEspansione: ['LIB-8200N', 'LIB-8200'],
   soglie: SOGLIE_PREDEFINITE,
   claudeApiKey: '',
