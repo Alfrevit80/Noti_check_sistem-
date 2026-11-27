@@ -4,6 +4,7 @@ import { HashRouter, Route, Routes } from 'react-router-dom';
 import { registerSW } from 'virtual:pwa-register';
 import { Layout } from './ui/components/Layout';
 import { ImpiantiPage } from './ui/pages/ImpiantiPage';
+import { HomePage } from './ui/pages/HomePage';
 import { ImpiantoPage } from './ui/pages/ImpiantoPage';
 import { CentralePage } from './ui/pages/CentralePage';
 import { RetePage } from './ui/pages/RetePage';
@@ -25,7 +26,8 @@ createRoot(document.getElementById('root')!).render(
     <HashRouter>
       <Layout>
         <Routes>
-          <Route path="/" element={<ImpiantiPage />} />
+          <Route path="/" element={<HomePage />} />
+          <Route path="/impianti" element={<ImpiantiPage />} />
           <Route path="/impianto/:id" element={<ImpiantoPage />} />
           <Route path="/impianto/:id/rete" element={<RetePage />} />
           <Route path="/centrale/:id" element={<CentralePage />} />
@@ -34,7 +36,7 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/sessione/:id/guida/:passo" element={<GuidaPage />} />
           <Route path="/sessione/:id/lettura/:lid" element={<LetturaPage />} />
           <Route path="/impostazioni" element={<ImpostazioniPage />} />
-          <Route path="*" element={<ImpiantiPage />} />
+          <Route path="*" element={<HomePage />} />
         </Routes>
       </Layout>
     </HashRouter>

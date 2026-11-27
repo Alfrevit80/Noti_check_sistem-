@@ -165,6 +165,12 @@ export const GUIDE_PASSI: Record<string, Consiglio[]> = {
     pol('Primo dispositivo del loop (ramo A) ai connettori di destra, ritorno (ramo B) ai connettori di sinistra.'),
     pol('Il carattere «?» indica un problema del dispositivo o della linea; «-» può indicare un indirizzo doppio.'),
   ],
+  multimetro: [
+    pol('Loop scollegato dalla centrale e centrale spenta. Ramo A ai connettori di destra («Uscita loop»), ramo B a sinistra («Ritorno»), entrambe le calze ai morsetti grigi e il filo di terra.'),
+    prat('Premi in sequenza i tasti Ω, μH, nF e terra: ogni colonna resta «----» finché non la misuri.'),
+    prat('Se la calza risulta «>150 Ohm» con + e − normali, controlla prima che le calze siano sui morsetti grigi del POL.'),
+    prat('Un valore 0 Ω significa che i due morsetti del POL sono uniti (ponticello o stesso filo): la misura non riguarda la linea.'),
+  ],
   riconoscimento: [
     am('Menù Punti → Auto-riconoscimento: inserire il numero di CPU e attivare «Verifica doppi indirizzi» = SI.'),
     am('Con il tasto PROT si passa dal riepilogo ADV a quello CLIP.'),

@@ -6,10 +6,12 @@ import { esportaFileCifrato } from '../../db/exportImport';
 import { verificaRequisitiPassword } from '../../security/crypto';
 import { CampoPassword } from '../Accesso';
 import { analizzaRete } from '../../analysis/network';
-import { Briciole, Caricamento, NonTrovato } from '../components/Layout';
+import { Caricamento, Intestazione, NonTrovato} from '../components/Layout';
 import { CampoTesto } from '../components/Campi';
 import { ElencoAnomalie } from '../components/ElencoAnomalie';
 import { useState, type FormEvent } from 'react';
+import { IdCard, Server, Share2 } from 'lucide-react';
+import { formattaData, testoEsito } from '../etichette';
 import { PulsantePdf } from '../sessione/PulsantePdf';
 import { pdfImpianto } from '../../report/pdfImpianto';
 import { nomePdf } from '../../report/genera';
@@ -21,6 +23,10 @@ export function ImpiantoPage() {
   const impianto = useLiveQuery(() => db.impianti.get(id).then((x) => x ?? null), [id]);
   const centrali = useLiveQuery(() => db.centrali.where('impiantoId').equals(id).sortBy('nodoCpu'), [id]);
   const rete = useLiveQuery(() => db.reti.get(id).then((x) => x ?? null), [id]);
+  const loops = useLiveQuery(async () => {
+    const cc = await db.centrali.where('impiantoId').equals(id).primaryKeys();
+    return db.loops.where('centraleId').anyOf(cc).toArray();
+  }, [id]);
   const [msg, setMsg] = useState('');
   const [dialogoExport, setDialogoExport] = useState(false);
 
@@ -67,27 +73,18 @@ export function ImpiantoPage() {
 
   return (
     <>
-      <Briciole voci={[{ testo: 'Impianti', a: '/' }, { testo: impianto.cliente || 'Impianto' }]} />
-      <div className="titolo-riga">
-        <h1>{impianto.cliente || 'Nuovo impianto'}</h1>
-        <div className="azioni">
-          <button onClick={() => setDialogoExport(true)}>Esporta progetto</button>
-        </div>
-      </div>
+      <Intestazione
+        sopratitolo={impianto.nomeImpianto || 'Impianto'}
+        titolo={impianto.cliente || 'Nuovo impianto'}
+        indietro="/impianti"
+        azioni={
+          <button className="piccolo" onClick={() => setDialogoExport(true)} title="Esporta progetto cifrato">
+            <Share2 size={18} />
+          </button>
+        }
+      />
       {msg && <p className="ok-box">{msg}</p>}
       {dialogoExport && <DialogoExport onAnnulla={() => setDialogoExport(false)} onConferma={esporta} />}
-
-      <section className="scheda">
-        <h2>Anagrafica</h2>
-        <div className="griglia-campi">
-          <CampoTesto etichetta="Cliente" valore={impianto.cliente} onSalva={salva('cliente')} />
-          <CampoTesto etichetta="Impianto" valore={impianto.nomeImpianto} onSalva={salva('nomeImpianto')} placeholder="es. Edificio A, Capannone 2" />
-          <CampoTesto etichetta="Indirizzo" valore={impianto.indirizzo} onSalva={salva('indirizzo')} className="largo" />
-          <CampoTesto etichetta="Tecnico" valore={impianto.tecnico} onSalva={salva('tecnico')} />
-          <CampoTesto etichetta="Data" tipo="date" valore={impianto.data} onSalva={salva('data')} />
-          <CampoTesto etichetta="Note" multiriga valore={impianto.note} onSalva={salva('note')} className="largo" />
-        </div>
-      </section>
 
       <section className="scheda">
         <div className="titolo-riga">
@@ -99,22 +96,32 @@ export function ImpiantoPage() {
         {centrali.length === 0 ? (
           <p className="tenue">Nessuna centrale. Aggiungine una per iniziare.</p>
         ) : (
-          <ul className="elenco">
+          <div className="centrali">
             {centrali.map((c) => (
-              <li key={c.id}>
-                <Link to={`/centrale/${c.id}`} className="voce">
-                  <span className="voce-titolo">
-                    {c.nome} <span className="tenue">— {c.modello}</span>
-                  </span>
-                  <span className="voce-dettagli">
-                    CPU {c.nodoCpu || '?'} · {numeroLoopTotali(c)} loop
-                    {c.espansioni.length > 0 && ` (${c.loopBase} base + ${c.espansioni.length} espansioni)`}
-                    {c.firmware && ` · FW ${c.firmware}`}
+              <div key={c.id} className="centrale-card">
+                <Link to={`/centrale/${c.id}`} className="centrale-testa">
+                  <Server size={20} />
+                  <span>
+                    <strong>{c.nome}</strong>
+                    <small>
+                      {c.modello} · CPU {c.nodoCpu || '?'} · {numeroLoopTotali(c)} loop{c.firmware && ` · FW ${c.firmware}`}
+                    </small>
                   </span>
                 </Link>
-              </li>
+                <div className="tasselli">
+                  {(loops ?? [])
+                    .filter((l) => l.centraleId === c.id)
+                    .sort((x, y) => x.numero - y.numero)
+                    .map((l) => (
+                      <Link key={l.id} to={`/loop/${l.id}`} className={`tassello esito-${l.esito}`} title={`Loop ${l.numero}: ${testoEsito(l.esito)}`}>
+                        <span className="num">{l.numero}</span>
+                        <span className="et">{testoEsito(l.esito)}</span>
+                      </Link>
+                    ))}
+                </div>
+              </div>
             ))}
-          </ul>
+          </div>
         )}
       </section>
 
@@ -136,6 +143,25 @@ export function ImpiantoPage() {
         </section>
       )}
       {centrali.length <= 1 && anomalieRete.length > 0 && <ElencoAnomalie anomalie={anomalieRete} />}
+
+      <details className="scheda anagrafica" open={!impianto.cliente}>
+        <summary>
+          <h2 className="sezione-titolo">
+            <IdCard size={20} /> Anagrafica
+          </h2>
+          <span className="tenue">
+            {[impianto.indirizzo, impianto.tecnico, formattaData(impianto.data)].filter(Boolean).join(' · ') || 'da compilare'}
+          </span>
+        </summary>
+        <div className="griglia-campi">
+          <CampoTesto etichetta="Cliente" valore={impianto.cliente} onSalva={salva('cliente')} />
+          <CampoTesto etichetta="Impianto" valore={impianto.nomeImpianto} onSalva={salva('nomeImpianto')} placeholder="es. Edificio A, Capannone 2" />
+          <CampoTesto etichetta="Indirizzo" valore={impianto.indirizzo} onSalva={salva('indirizzo')} className="largo" />
+          <CampoTesto etichetta="Tecnico" valore={impianto.tecnico} onSalva={salva('tecnico')} />
+          <CampoTesto etichetta="Data" tipo="date" valore={impianto.data} onSalva={salva('data')} />
+          <CampoTesto etichetta="Note" multiriga valore={impianto.note} onSalva={salva('note')} className="largo" />
+        </div>
+      </details>
 
       <section className="scheda">
         <h2>Rapportino riepilogativo</h2>

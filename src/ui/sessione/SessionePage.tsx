@@ -5,12 +5,12 @@ import { analizzaSessione, esitoSuggerito, misureMancanti } from '../../analysis
 import { DEF_MISURE, formattaValore, nomeRamo } from '../../analysis/misure';
 import { valutaMisura } from '../../analysis/valutazione';
 import { aggiungiNota, cronologia, eliminaEvento, eliminaMisura, eliminaSessione, riapriSessione, testoSintomo } from '../../db/sessioni';
-import { Briciole, Caricamento, NonTrovato } from '../components/Layout';
+import { Caricamento, Intestazione, NonTrovato} from '../components/Layout';
 import { ElencoAnomalie } from '../components/ElencoAnomalie';
 import { formattaOra, testoEsito } from '../etichette';
 import { RiepilogoCavo, TabellaIsolamento, TabellaResistenzeTensioni } from './TabelleMisure';
 import { EditorRiconoscimento } from './EditorRiconoscimento';
-import { passoDaRiprendere } from './GuidaPage';
+import { PannelloProssimo } from './PannelloProssimo';
 import { useSessione } from './useSessione';
 import { PannelloPol } from '../pol/PannelloPol';
 import { CopiaPerClaude } from '../components/CopiaPerClaude';
@@ -45,28 +45,29 @@ export function SessionePage() {
 
   return (
     <>
-      <Briciole
-        voci={[
-          { testo: impianto?.cliente || 'Impianto', a: impianto ? `/impianto/${impianto.id}` : undefined },
-          { testo: centrale?.nome || 'Centrale', a: centrale ? `/centrale/${centrale.id}` : undefined },
-          { testo: `Loop ${loop.numero}`, a: `/loop/${loop.id}` },
-          { testo: 'Verifica' },
-        ]}
+      <Intestazione
+        sopratitolo={`${impianto?.cliente || 'Impianto'} · ${centrale?.nome || 'Centrale'} · Loop ${loop.numero}`}
+        titolo={`Verifica ${formattaOra(s.inizio).replace(/\/\d{4},/, '')}`}
+        indietro={`/loop/${loop.id}`}
+        azioni={
+          s.fine ? (
+            <button className="piccolo" onClick={() => riapriSessione(id)}>
+              Riapri
+            </button>
+          ) : null
+        }
       />
-      <div className="titolo-riga">
-        <h1>
-          Verifica loop {loop.numero} <span className="tenue">— {formattaOra(s.inizio)}</span>
-        </h1>
-        <div className="azioni">
-          {s.fine ? (
-            <button onClick={() => riapriSessione(id)}>Riapri</button>
-          ) : (
-            <Link className="bottone primario-link" to={`/sessione/${id}/guida/${passoDaRiprendere(s)}`}>
-              Procedura guidata →
-            </Link>
-          )}
-        </div>
-      </div>
+      <PannelloProssimo s={s} loop={loop} soglie={soglie} sigle={impostazioni.sigle} />
+
+      <nav className="indice-sezioni" aria-label="Sezioni della verifica">
+        <a href="#analisi">Analisi</a>
+        <a href="#misure">Misure</a>
+        <a href="#pol">POL</a>
+        <a href="#claude">Claude</a>
+        <a href="#foto">Foto</a>
+        <a href="#rapportino">Rapportino</a>
+        <a href="#cronologia">Cronologia</a>
+      </nav>
 
       <section className="scheda stato-sessione">
         <dl className="dati">
@@ -104,12 +105,12 @@ export function SessionePage() {
         )}
       </section>
 
-      <section className="scheda">
+      <section className="scheda" id="analisi">
         <h2>Analisi</h2>
         <ElencoAnomalie anomalie={anomalie} vuoto={mancanti.length ? 'Nessuna anomalia nelle misure inserite finora.' : 'Nessuna anomalia rilevata.'} />
       </section>
 
-      <section className="scheda">
+      <section className="scheda" id="claude">
         <h2>Chiedi a Claude</h2>
         <p className="tenue">
           Copia i dati della verifica (senza nome del cliente né indirizzo) e incollali nella chat di Claude: usi il tuo abbonamento, senza costi
@@ -127,7 +128,7 @@ export function SessionePage() {
       </section>
 
       <div className="due-colonne">
-        <section className="scheda">
+        <section className="scheda" id="misure">
           <h2>Misure a cavo scollegato</h2>
           <TabellaIsolamento sessione={s} soglie={soglie} />
           <p className="tenue legenda">Tocca una cella per misurare o rimisurare.</p>
@@ -138,7 +139,7 @@ export function SessionePage() {
         </section>
       </div>
 
-      <section className="scheda">
+      <section className="scheda" id="pol">
         <h2>Letture POL-200-TS</h2>
         <PannelloPol s={s} loop={loop} sigle={impostazioni.sigle} soglie={soglie} conAnalisi={false} />
       </section>
@@ -159,13 +160,13 @@ export function SessionePage() {
       </section>
 
       {impianto && (
-        <section className="scheda">
+        <section className="scheda" id="foto">
           <h2>Foto</h2>
           <FotoSessione impiantoId={impianto.id} sessioneId={s.id} />
         </section>
       )}
 
-      <section className="scheda">
+      <section className="scheda" id="rapportino">
         <h2>Rapportino</h2>
         <p className="tenue">PDF A4 con intestazione, stato iniziale e finale, misure, mappatura, riconoscimento, analisi, cronologia, foto, esito e spazio per le firme.</p>
         <PulsantePdf
@@ -176,7 +177,7 @@ export function SessionePage() {
         />
       </section>
 
-      <section className="scheda">
+      <section className="scheda" id="cronologia">
         <h2>Cronologia</h2>
         <Cronologia s={s} />
       </section>

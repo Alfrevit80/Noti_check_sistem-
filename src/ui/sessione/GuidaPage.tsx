@@ -7,7 +7,7 @@ import { analizzaSessione, esitoSuggerito } from '../../analysis/sessione';
 import { tensioneResiduaAlta } from '../../analysis/voltages';
 import { lunghezzaMassima, resistenzaConduttore, sezioneMinima, stimaLunghezza } from '../../analysis/loopResistance';
 import { aggiornaSessione, chiudiSessione, impostaSintomo, salvaCavo } from '../../db/sessioni';
-import { Briciole, Caricamento, NonTrovato } from '../components/Layout';
+import { Caricamento, Intestazione, NonTrovato} from '../components/Layout';
 import { CampoNumero, CampoScelta, CampoTesto } from '../components/Campi';
 import { ElencoAnomalie } from '../components/ElencoAnomalie';
 import { ESITI_LOOP, testoEsito } from '../etichette';
@@ -16,6 +16,7 @@ import { EditorRiconoscimento } from './EditorRiconoscimento';
 import { useSessione } from './useSessione';
 import { SuggerimentiPasso } from './ComeMisurare';
 import { PannelloPol } from '../pol/PannelloPol';
+import { SchermataPol } from './SchermataPol';
 import { useAlSalvataggio } from '../salvataggio';
 import type { CtxSessione } from './useSessione';
 
@@ -31,7 +32,6 @@ const domIso = (r: 'A' | 'B'): Domanda[] => TIPI_ISOLAMENTO.map((tipo) => ({ ram
 const DOM_RES: Domanda[] = [{ ramo: 'loop', tipo: 'rP' }, { ramo: 'loop', tipo: 'rN' }];
 const DOM_RES_CALZA: Domanda[] = [...DOM_RES, { ramo: 'loop', tipo: 'rC' }];
 const DOM_LINEA: Domanda[] = (['A', 'B'] as const).flatMap((ramo) => [{ ramo, tipo: 'pN' as const }, { ramo, tipo: 'nP' as const }]);
-const DOM_MULTIMETRO: Domanda[] = [{ ramo: 'loop', tipo: 'cap' }, { ramo: 'loop', tipo: 'vRit' }];
 
 export const PASSI: Passo[] = [
   { id: 'sintomo', titolo: 'Sintomo', completo: (s) => !!s.sintomo },
@@ -42,7 +42,7 @@ export const PASSI: Passo[] = [
   { id: 'resistenza', titolo: 'Resistenza', completo: (s) => tutte(s, DOM_RES) },
   { id: 'cavo', titolo: 'Cavo', completo: (s) => !!(s.cavo.lunghezzaM && s.cavo.sezioneMm2) },
   { id: 'pol', titolo: 'Letture POL', completo: (s) => s.letture.length > 0 },
-  { id: 'ritorno', titolo: 'Multimetro POL', completo: (s) => tutte(s, DOM_MULTIMETRO) },
+  { id: 'multimetro', titolo: 'Multimetro POL', completo: (s) => !!ultimaMisura(s.misure, 'loop', 'vRit') || !!ultimaMisura(s.misure, 'loop', 'gCP') },
   { id: 'ricollegamento', titolo: 'Ricollegamento', completo: (s) => !!ultimaMisura(s.misure, 'loop', 'vLin') },
   { id: 'riconoscimento', titolo: 'Riconoscimento', completo: (s) => s.riconoscimenti.length > 0 },
   { id: 'esito', titolo: 'Esito', completo: (s) => !!s.fine },
@@ -61,7 +61,7 @@ export function GuidaPage() {
   if (ctx === null) return <NonTrovato cosa="Verifica" />;
   const { sessione, loop, centrale, impianto } = ctx;
 
-  const i = Math.max(0, PASSI.findIndex((p) => p.id === passo));
+  const i = Math.max(0, PASSI.findIndex((p) => p.id === (passo === 'ritorno' ? 'multimetro' : passo)));
   const p = PASSI[i];
   const vai = (j: number) => nav(`/sessione/${id}/guida/${PASSI[j].id}`);
   const prossimo = () => (i < PASSI.length - 1 ? vai(i + 1) : nav(`/sessione/${id}`));
@@ -69,13 +69,10 @@ export function GuidaPage() {
 
   return (
     <>
-      <Briciole
-        voci={[
-          { testo: impianto?.cliente || 'Impianto', a: impianto ? `/impianto/${impianto.id}` : undefined },
-          { testo: centrale?.nome || 'Centrale', a: centrale ? `/centrale/${centrale.id}` : undefined },
-          { testo: `Loop ${loop.numero}`, a: `/loop/${loop.id}` },
-          { testo: 'Verifica', a: `/sessione/${id}` },
-        ]}
+      <Intestazione
+        sopratitolo={`${impianto?.cliente || 'Impianto'} · ${centrale?.nome || 'Centrale'} · Loop ${loop.numero}`}
+        titolo={`${i + 1}. ${p.titolo}`}
+        indietro={`/sessione/${id}`}
       />
       <nav className="passi" aria-label="Passi della procedura">
         {PASSI.map((x, j) => (
@@ -87,9 +84,6 @@ export function GuidaPage() {
       </nav>
 
       <section className="scheda passo-scheda">
-        <h1>
-          {i + 1}. {p.titolo}
-        </h1>
         <ContenutoPasso key={p.id + (q ?? '')} passo={p.id} ctx={ctx} q={q} onAvanti={prossimo} />
       </section>
 
@@ -179,14 +173,11 @@ function ContenutoPasso({ passo, ctx, q, onAvanti }: { passo: string; ctx: CtxSe
           <PannelloPol s={s} loop={ctx.loop} sigle={impostazioni.sigle} soglie={soglie} />
         </>
       );
-    case 'ritorno':
+    case 'multimetro':
       return (
         <>
-          <p className="tenue">
-            Valori del multimetro del POL-200-TS: capacità tra + e − (massimo {String(soglie.capacitaMaxUF).replace('.', ',')} μF) e
-            tensione di ritorno (sotto {soglie.vRitornoMinV} V la resistenza del loop è troppo alta).
-          </p>
-          <SequenzaMisure sessioneId={s.id} misure={s.misure} domande={DOM_MULTIMETRO} soglie={soglie} iniziale={q} onCompletata={onAvanti} />
+          <SuggerimentiPasso passo="multimetro" />
+          <SchermataPol s={s} soglie={soglie} />
         </>
       );
     case 'ricollegamento':

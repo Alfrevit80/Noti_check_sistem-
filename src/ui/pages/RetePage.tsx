@@ -4,7 +4,7 @@ import { db } from '../../db/db';
 import { adesso, leggiRete, nuovoId, salvaRete } from '../../db/repo';
 import { analizzaRete } from '../../analysis/network';
 import type { EsitoVoce, Rete, StatoBus, TipoComunicazione, Topologia, VoceChecklist } from '../../model/types';
-import { Briciole, Caricamento, NonTrovato } from '../components/Layout';
+import { Caricamento, Intestazione, NonTrovato} from '../components/Layout';
 import { CampoScelta, CampoTesto } from '../components/Campi';
 import { ElencoAnomalie } from '../components/ElencoAnomalie';
 import { useState } from 'react';
@@ -35,14 +35,7 @@ export function RetePage() {
 
   return (
     <>
-      <Briciole
-        voci={[
-          { testo: 'Impianti', a: '/' },
-          { testo: impianto.cliente || 'Impianto', a: `/impianto/${id}` },
-          { testo: 'Rete' },
-        ]}
-      />
-      <h1>Verifica rete tra centrali</h1>
+      <Intestazione sopratitolo={impianto.cliente || 'Impianto'} titolo="Rete tra centrali" indietro={`/impianto/${id}`} />
 
       <section className="scheda">
         <h2>Configurazione</h2>

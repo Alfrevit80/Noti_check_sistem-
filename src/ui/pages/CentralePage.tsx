@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { db } from '../../db/db';
 import { aggiornaCentrale, eliminaCentrale, eliminaLoop, leggiImpostazioni, numeroLoopTotali } from '../../db/repo';
 import type { Centrale, Espansione } from '../../model/types';
-import { Briciole, Caricamento, NonTrovato } from '../components/Layout';
+import { Caricamento, Intestazione, NonTrovato} from '../components/Layout';
 import { CampoNumero, CampoScelta, CampoTesto } from '../components/Campi';
 import { testoEsito } from '../etichette';
 import { analizzaCentrale } from '../../analysis/centrale';
@@ -46,14 +46,7 @@ export function CentralePage() {
 
   return (
     <>
-      <Briciole
-        voci={[
-          { testo: 'Impianti', a: '/' },
-          { testo: impianto?.cliente || 'Impianto', a: `/impianto/${c.impiantoId}` },
-          { testo: c.nome },
-        ]}
-      />
-      <h1>{c.nome}</h1>
+      <Intestazione sopratitolo={`${impianto?.cliente || 'Impianto'} · ${c.modello}`} titolo={c.nome} indietro={`/impianto/${c.impiantoId}`} />
 
       <section className="scheda">
         <h2>Dati centrale</h2>

@@ -3,10 +3,11 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { db } from '../../db/db';
 import { aggiornaLoop, creaSessione } from '../../db/repo';
 import type { EsitoLoop, Loop } from '../../model/types';
-import { Briciole, Caricamento, NonTrovato } from '../components/Layout';
+import { Caricamento, Intestazione, NonTrovato} from '../components/Layout';
 import { CampoNumero, CampoScelta, CampoTesto } from '../components/Campi';
 import { ESITI_LOOP, formattaOra, testoEsito } from '../etichette';
 import { ConfrontoLetture } from '../pol/ConfrontoLetture';
+import { avanzamento } from '../../analysis/prossimoPasso';
 import { NOME_RAMO } from '../pol/LetturaPage';
 
 export function LoopPage() {
@@ -24,17 +25,11 @@ export function LoopPage() {
 
   return (
     <>
-      <Briciole
-        voci={[
-          { testo: 'Impianti', a: '/' },
-          { testo: impianto?.cliente || 'Impianto', a: impianto ? `/impianto/${impianto.id}` : undefined },
-          { testo: centrale?.nome || 'Centrale', a: centrale ? `/centrale/${centrale.id}` : undefined },
-          { testo: `Loop ${loop.numero}` },
-        ]}
+      <Intestazione
+        sopratitolo={`${impianto?.cliente || 'Impianto'} · ${centrale?.nome || 'Centrale'}`}
+        titolo={`Loop ${loop.numero} — ${loop.scheda}`}
+        indietro={centrale ? `/centrale/${centrale.id}` : '/'}
       />
-      <h1>
-        Loop {loop.numero} <span className="tenue">— {loop.scheda}</span>
-      </h1>
 
       <section className="scheda">
         <h2>Dati del loop</h2>
@@ -84,8 +79,11 @@ export function LoopPage() {
                     {formattaOra(s.inizio)}
                     <span className={`badge esito-${s.esito}`}>{s.fine ? testoEsito(s.esito) : 'In corso'}</span>
                   </span>
+                  <span className={`barra-avanzamento ${avanzamento(s) === 100 ? 'completa' : ''}`} style={{ margin: '0.3rem 0' }}>
+                    <div style={{ width: `${avanzamento(s)}%` }} />
+                  </span>
                   <span className="voce-dettagli">
-                    {s.misure.length} misure · {s.letture.length} letture POL · {s.tecnico || 'tecnico n.d.'}
+                    {avanzamento(s)}% · {s.misure.length} misure · {s.letture.length} letture POL · {s.tecnico || 'tecnico n.d.'}
                   </span>
                 </Link>
               </li>

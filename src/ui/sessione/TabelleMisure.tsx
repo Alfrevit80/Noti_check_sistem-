@@ -105,7 +105,7 @@ export function TabellaResistenzeTensioni({ sessione, soglie }: { sessione: Sess
           </tr>
           <tr>
             <th scope="row">Capacità + / −</th>
-            <CellaMisura misure={sessione.misure} ramo="loop" tipo="cap" soglie={soglie} link={g('ritorno', 'cap')} />
+            <CellaMisura misure={sessione.misure} ramo="loop" tipo="cap" soglie={soglie} link={g('multimetro', 'cap')} />
             <td className="tenue">≤ {String(soglie.capacitaMaxUF).replace('.', ',')} μF</td>
           </tr>
           <tr>
@@ -115,7 +115,7 @@ export function TabellaResistenzeTensioni({ sessione, soglie }: { sessione: Sess
           </tr>
           <tr>
             <th scope="row">Tensione di ritorno (POL)</th>
-            <CellaMisura misure={sessione.misure} ramo="loop" tipo="vRit" soglie={soglie} link={g('ritorno', 'vRit')} />
+            <CellaMisura misure={sessione.misure} ramo="loop" tipo="vRit" soglie={soglie} link={g('multimetro', 'vRit')} />
             <td className="tenue">≥ {soglie.vRitornoMinV} V</td>
           </tr>
         </tbody>

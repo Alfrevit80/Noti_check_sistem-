@@ -150,6 +150,7 @@ export async function creaLettura(sessioneId: string, ramo: LetturaPol['ramo'], 
     sensori: copiaDa ? { ...copiaDa.sensori } : {},
     moduli: copiaDa ? { ...copiaDa.moduli } : {},
     colori: copiaDa?.colori ? { sensori: { ...copiaDa.colori.sensori }, moduli: { ...copiaDa.colori.moduli } } : undefined,
+    modalita: copiaDa?.modalita ?? 'ADV', // AM-8200N con sensori NFX: protocollo Advanced
     nota: '',
   };
   await modifica(sessioneId, d, (s) => ({ ...s, letture: [...s.letture, l], eventi: [...s.eventi, evento(testoEventoLettura(l), true, l.id, l.ora)] }));
@@ -194,7 +195,7 @@ export async function impostaCella(
   );
 }
 
-export async function aggiornaLettura(sessioneId: string, letturaId: string, patch: Partial<Pick<LetturaPol, 'nota' | 'ramo' | 'ora'>>, d: NcsDB = dbApp) {
+export async function aggiornaLettura(sessioneId: string, letturaId: string, patch: Partial<Pick<LetturaPol, 'nota' | 'ramo' | 'ora' | 'modalita'>>, d: NcsDB = dbApp) {
   await modifica(sessioneId, d, (s) => conLettura(s, letturaId, (l) => ({ ...l, ...patch })));
 }
 

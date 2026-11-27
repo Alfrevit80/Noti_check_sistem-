@@ -5,7 +5,7 @@ import type { FamigliaPol, LetturaPol } from '../../model/types';
 import { analizzaLettura, indirizzi } from '../../analysis/pol';
 import { aggiornaLettura, eliminaLettura, impostaCella } from '../../db/sessioni';
 import { useSessione } from '../sessione/useSessione';
-import { Briciole, Caricamento, NonTrovato } from '../components/Layout';
+import { Caricamento, Intestazione, NonTrovato} from '../components/Layout';
 import { CampoTesto } from '../components/Campi';
 import { ElencoAnomalie } from '../components/ElencoAnomalie';
 import { formattaOra } from '../etichette';
@@ -72,18 +72,12 @@ export function LetturaPage() {
 
   return (
     <>
-      <Briciole
-        voci={[
-          { testo: `Loop ${loop.numero}`, a: `/loop/${loop.id}` },
-          { testo: 'Verifica', a: `/sessione/${s.id}` },
-          { testo: 'Letture POL', a: `/sessione/${s.id}/guida/pol` },
-          { testo: NOME_RAMO[l.ramo] },
-        ]}
+      <Intestazione
+        sopratitolo={`Loop ${loop.numero} · lettura delle ${formattaOra(l.ora).slice(-5)}`}
+        titolo={`POL — ${NOME_RAMO[l.ramo]}`}
+        indietro={`/sessione/${s.id}/guida/pol`}
       />
       <div className="titolo-riga">
-        <h1>
-          Lettura POL — {NOME_RAMO[l.ramo]} <span className="tenue">{formattaOra(l.ora).slice(-5)}</span>
-        </h1>
         <div className="scelte" role="radiogroup" aria-label="Lato della lettura">
           {(['A', 'B', 'chiuso'] as const).map((r) => (
             <button key={r} type="button" role="radio" aria-checked={l.ramo === r} className={l.ramo === r ? 'scelta attiva' : 'scelta'} onClick={() => aggiornaLettura(s.id, lid, { ramo: r })}>
@@ -92,6 +86,16 @@ export function LetturaPage() {
           ))}
         </div>
       </div>
+
+      <div className="scelte" role="radiogroup" aria-label="Modalità del POL">
+        <span className="tenue" style={{ alignSelf: 'center' }}>Modalità POL:</span>
+        {(['ADV', 'CLIP&ADV', 'CLIP'] as const).map((m) => (
+          <button key={m} type="button" role="radio" aria-checked={l.modalita === m} className={l.modalita === m ? 'scelta attiva' : 'scelta'} onClick={() => aggiornaLettura(s.id, lid, { modalita: m })}>
+            {m}
+          </button>
+        ))}
+      </div>
+      {l.modalita === 'CLIP&ADV' && <p className="attenzione-box">Con la centrale AM-8200N e sensori NFX leggi in <strong>ADV</strong>: in CLIP&ADV compaiono «??» e minuscole che in ADV spariscono.</p>}
 
       <div className="schede-famiglia" role="tablist">
         {(['sensori', 'moduli'] as const).map((f) => (

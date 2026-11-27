@@ -7,7 +7,7 @@ import type { ProfiloCentrale, RigaSezione } from '../../model/types';
 import { SIGLE_PREDEFINITE, SOGLIE_PREDEFINITE } from '../../settings/defaults';
 import type { SiglaPol } from '../../model/types';
 import { CampoNumero, CampoTesto } from '../components/Campi';
-import { Caricamento } from '../components/Layout';
+import { Caricamento, Intestazione } from '../components/Layout';
 
 export function ImpostazioniPage() {
   const s = useLiveQuery(() => leggiImpostazioni(), []);
@@ -29,7 +29,7 @@ export function ImpostazioniPage() {
 
   return (
     <>
-      <h1>Impostazioni</h1>
+      <Intestazione titolo="Impostazioni" indietro="/" />
 
       <Sicurezza />
 

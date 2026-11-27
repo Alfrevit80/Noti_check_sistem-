@@ -1,6 +1,8 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useRef, useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { Plus, Upload } from 'lucide-react';
+import { Intestazione } from '../components/Layout';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { db } from '../../db/db';
 import { creaImpianto } from '../../db/repo';
 import { ErroreImport, decifraFile, importaProgetto, leggiFile, type FileCifrato, type ModoImport } from '../../db/exportImport';
@@ -19,6 +21,14 @@ export function ImpiantiPage() {
   }, []);
 
   const fileRef = useRef<HTMLInputElement>(null);
+  const [cerca, setCerca] = useSearchParams();
+  // dalla home: «Importa progetto» apre subito la scelta del file
+  useEffect(() => {
+    if (cerca.get('importa')) {
+      setCerca({}, { replace: true });
+      setTimeout(() => fileRef.current?.click(), 100);
+    }
+  }, [cerca, setCerca]);
   const [daImportare, setDaImportare] = useState<{ p: ProgettoFile; esiste: boolean } | null>(null);
   const [daDecifrare, setDaDecifrare] = useState<FileCifrato | null>(null);
   const [passwordFile, setPasswordFile] = useState('');
@@ -86,14 +96,14 @@ export function ImpiantiPage() {
 
   return (
     <>
-      <div className="titolo-riga">
-        <h1>Impianti</h1>
-        <div className="azioni">
-          <button onClick={() => fileRef.current?.click()}>Importa progetto…</button>
-          <button className="primario" onClick={nuovo}>
-            + Nuovo impianto
-          </button>
-        </div>
+      <Intestazione titolo="Impianti" indietro="/" senzaSalva />
+      <div className="azioni-rapide">
+        <button className="primario" onClick={nuovo}>
+          <Plus size={20} /> Nuovo impianto
+        </button>
+        <button onClick={() => fileRef.current?.click()}>
+          <Upload size={20} /> Importa progetto
+        </button>
       </div>
       <input
         ref={fileRef}
