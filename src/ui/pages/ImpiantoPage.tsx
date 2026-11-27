@@ -2,15 +2,13 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { db } from '../../db/db';
 import { aggiornaImpianto, creaCentrale, eliminaImpianto, numeroLoopTotali } from '../../db/repo';
-import { esportaFileCifrato } from '../../db/exportImport';
-import { verificaRequisitiPassword } from '../../security/crypto';
-import { CampoPassword } from '../Accesso';
+import { PulsanteEsporta } from '../components/EsportaImpianto';
 import { analizzaRete } from '../../analysis/network';
 import { Caricamento, Intestazione, NonTrovato} from '../components/Layout';
 import { CampoTesto } from '../components/Campi';
 import { ElencoAnomalie } from '../components/ElencoAnomalie';
-import { useState, type FormEvent } from 'react';
-import { IdCard, Server, Share2 } from 'lucide-react';
+import { useState } from 'react';
+import { Download, IdCard, Server, Share2 } from 'lucide-react';
 import { formattaData, testoEsito } from '../etichette';
 import { PulsantePdf } from '../sessione/PulsantePdf';
 import { pdfImpianto } from '../../report/pdfImpianto';
@@ -27,8 +25,6 @@ export function ImpiantoPage() {
     const cc = await db.centrali.where('impiantoId').equals(id).primaryKeys();
     return db.loops.where('centraleId').anyOf(cc).toArray();
   }, [id]);
-  const [msg, setMsg] = useState('');
-  const [dialogoExport, setDialogoExport] = useState(false);
   const [anagraficaAperta, setAnagraficaAperta] = useState<boolean | null>(null);
 
   if (impianto === undefined || centrali === undefined || rete === undefined) return <Caricamento />;
@@ -36,30 +32,6 @@ export function ImpiantoPage() {
 
   const salva = (campo: keyof typeof impianto) => (v: string) => aggiornaImpianto(id, { [campo]: v });
   const anomalieRete = analizzaRete(rete, centrali);
-
-  async function esporta(password: string) {
-    setMsg('');
-    const { nome, testo } = await esportaFileCifrato(id, password);
-    const file = new File([testo], nome, { type: 'application/json' });
-    setDialogoExport(false);
-    // Sul telefono: foglio di condivisione (WhatsApp, mail, Drive…). Altrimenti download.
-    if (navigator.canShare?.({ files: [file] })) {
-      try {
-        await navigator.share({ files: [file], title: nome });
-        setMsg(`File cifrato condiviso: ${nome}`);
-        return;
-      } catch (e) {
-        if ((e as Error).name === 'AbortError') return;
-      }
-    }
-    const url = URL.createObjectURL(file);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = nome;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 10_000);
-    setMsg(`File cifrato salvato: ${nome}`);
-  }
 
   async function elimina() {
     if (!confirm('Eliminare questo impianto con tutte le centrali, i loop, le misure e le foto? L\'operazione non si può annullare.')) return;
@@ -79,13 +51,11 @@ export function ImpiantoPage() {
         titolo={impianto.cliente || 'Nuovo impianto'}
         indietro="/impianti"
         azioni={
-          <button className="piccolo" onClick={() => setDialogoExport(true)} title="Esporta progetto cifrato">
+          <PulsanteEsporta impiantoId={id} className="piccolo" title="Esporta impianto">
             <Share2 size={18} />
-          </button>
+          </PulsanteEsporta>
         }
       />
-      {msg && <p className="ok-box">{msg}</p>}
-      {dialogoExport && <DialogoExport onAnnulla={() => setDialogoExport(false)} onConferma={esporta} />}
 
       <section className="scheda">
         <div className="titolo-riga">
@@ -182,53 +152,26 @@ export function ImpiantoPage() {
         />
       </section>
 
+      <section className="scheda">
+        <h2 className="sezione-titolo">
+          <Share2 size={20} /> Trasferisci su un altro PC o smartphone
+        </h2>
+        <ol className="istruzioni">
+          <li>Tocca «Esporta impianto» e scegli una password per il file.</li>
+          <li>Invia il file all'altro dispositivo (mail, WhatsApp, Drive, chiavetta, AirDrop…). Sul PC viene salvato nei download.</li>
+          <li>Sull'altro dispositivo apri l'app, vai in <strong>Impianti → Importa progetto</strong>, scegli il file e inserisci la password.</li>
+        </ol>
+        <p className="tenue">Se l'impianto esiste già sull'altro dispositivo puoi aggiornarlo oppure importarlo come copia.</p>
+        <PulsanteEsporta impiantoId={id} className="primario">
+          <Download size={20} /> Esporta impianto
+        </PulsanteEsporta>
+      </section>
+
       <section className="scheda zona-pericolo">
         <button className="pericolo" onClick={elimina}>
           Elimina impianto
         </button>
       </section>
     </>
-  );
-}
-
-function DialogoExport({ onAnnulla, onConferma }: { onAnnulla: () => void; onConferma: (password: string) => Promise<void> }) {
-  const [p1, setP1] = useState('');
-  const [p2, setP2] = useState('');
-  const [errore, setErrore] = useState('');
-  const [attesa, setAttesa] = useState(false);
-  async function invia(e: FormEvent) {
-    e.preventDefault();
-    const r = verificaRequisitiPassword(p1);
-    if (r) return setErrore(r);
-    if (p1 !== p2) return setErrore('Le due password non coincidono.');
-    setAttesa(true);
-    try {
-      await onConferma(p1);
-    } catch (err) {
-      setErrore(`Esportazione non riuscita: ${String(err)}`);
-      setAttesa(false);
-    }
-  }
-  return (
-    <div className="dialogo-sfondo" role="dialog" aria-modal="true" aria-labelledby="titolo-export">
-      <form className="dialogo" onSubmit={invia}>
-        <h2 id="titolo-export">Esporta progetto cifrato</h2>
-        <p className="tenue">
-          Il file viene cifrato con la password che scegli qui. Servirà per importarlo su un altro dispositivo: comunicala
-          a parte, non nello stesso messaggio del file. Puoi usare anche la password di accesso dell'app.
-        </p>
-        <CampoPassword id="export-p1" etichetta="Password del file" valore={p1} onCambia={setP1} nuova autoFocus />
-        <CampoPassword id="export-p2" etichetta="Ripeti la password" valore={p2} onCambia={setP2} nuova />
-        {errore && <p className="errore-box">{errore}</p>}
-        <div className="azioni">
-          <button type="submit" className="primario" disabled={attesa}>
-            {attesa ? 'Cifratura…' : 'Esporta'}
-          </button>
-          <button type="button" onClick={onAnnulla}>
-            Annulla
-          </button>
-        </div>
-      </form>
-    </div>
   );
 }

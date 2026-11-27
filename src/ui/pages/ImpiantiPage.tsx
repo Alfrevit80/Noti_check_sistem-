@@ -1,10 +1,11 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { Plus, Upload } from 'lucide-react';
+import { Plus, Share2, Upload } from 'lucide-react';
 import { Intestazione } from '../components/Layout';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { db } from '../../db/db';
 import { creaImpianto } from '../../db/repo';
+import { PulsanteEsporta } from '../components/EsportaImpianto';
 import { ErroreImport, decifraFile, importaProgetto, leggiFile, type FileCifrato, type ModoImport } from '../../db/exportImport';
 import { CampoPassword } from '../Accesso';
 import type { ProgettoFile } from '../../model/schema';
@@ -108,7 +109,7 @@ export function ImpiantiPage() {
       <input
         ref={fileRef}
         type="file"
-        accept=".json,application/json"
+        accept=".json,application/json,text/plain,application/octet-stream"
         hidden
         onChange={(e) => scegliFile(e.target.files?.[0])}
       />
@@ -184,6 +185,9 @@ export function ImpiantiPage() {
                   {i.indirizzo && ` · ${i.indirizzo}`}
                 </span>
               </Link>
+              <PulsanteEsporta impiantoId={i.id} className="piccolo esporta-voce" title="Esporta impianto">
+                <Share2 size={18} />
+              </PulsanteEsporta>
             </li>
           ))}
         </ul>
