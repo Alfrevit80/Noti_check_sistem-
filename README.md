@@ -48,7 +48,10 @@ npm run preview   # prova della build (service worker incluso)
 3. ✅ Griglie POL (inserimento manuale), analisi lato A / lato B, vista sequenza, storico e confronto letture, confronto POL ↔ centrale
 4. ✅ Import dei file di manutenzione .MNT del POL-200-TS: griglie, dati per dispositivo, mappatura fisica dalla colonna DEP
 5. ✅ Rapportino PDF per loop e riepilogo impianto, foto allegate, tasto Salva
-6. ⏳ Integrazione con Claude
+6. ✅ Integrazione con Claude («Copia per Claude»: diagnosi, lettura foto delle griglie e della schermata Multimetro)
+7. ✅ Nuova interfaccia: home con verifiche in corso e prossimo passo, tasti Indietro e Salva in ogni pagina (anche Ctrl+S),
+   schermata «Multimetro POL» identica allo strumento, pannello «Cosa fare adesso», regole dai manuali
+   (portata del segnale A/B, calza/terra/+/− da POL, capacità, modalità ADV)
 
 ## Pubblicazione
 

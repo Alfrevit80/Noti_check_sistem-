@@ -29,6 +29,7 @@ export function ImpiantoPage() {
   }, [id]);
   const [msg, setMsg] = useState('');
   const [dialogoExport, setDialogoExport] = useState(false);
+  const [anagraficaAperta, setAnagraficaAperta] = useState<boolean | null>(null);
 
   if (impianto === undefined || centrali === undefined || rete === undefined) return <Caricamento />;
   if (impianto === null) return <NonTrovato cosa="Impianto" />;
@@ -144,7 +145,11 @@ export function ImpiantoPage() {
       )}
       {centrali.length <= 1 && anomalieRete.length > 0 && <ElencoAnomalie anomalie={anomalieRete} />}
 
-      <details className="scheda anagrafica" open={!impianto.cliente}>
+      <details
+        className="scheda anagrafica"
+        open={anagraficaAperta ?? !impianto.cliente}
+        onToggle={(e) => setAnagraficaAperta((e.currentTarget as HTMLDetailsElement).open)}
+      >
         <summary>
           <h2 className="sezione-titolo">
             <IdCard size={20} /> Anagrafica
