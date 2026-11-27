@@ -102,8 +102,12 @@ export type TipoMisura =
   | 'pT' | 'nT' | 'cT' | 'pC' | 'nC' // isolamento
   | 'pN' | 'nP' // + / − con dispositivi collegati (tester + su +, poi invertito)
   | 'rP' | 'rN' | 'rC' // resistenza A→B di +, − e calza
-  | 'cap' // capacità + / −
-  | 'vRes' | 'vRit' | 'vLin'; // tensioni: residua, ritorno (POL), di linea (centrale alimentata)
+  | 'cap' // capacità + / − (multimetro, μF)
+  | 'vRes' | 'vRit' | 'vLin' // tensioni: residua, ritorno (POL), di linea (centrale alimentata)
+  // Schermata Multimetro del POL-200-TS (kΩ e nF, come sul display; ">1000" = OL)
+  | 'gPN' | 'gCP' | 'gCN' // guasto + / −, calza / +, calza / −
+  | 'gTP' | 'gTN' | 'gTC' // guasto terra di +, − e calza
+  | 'cPN' | 'cCP' | 'cCN'; // capacità + / −, calza / +, calza / −
 
 /** Valore numerico oppure 'OL' (fuori scala = isolato / infinito). */
 export type ValoreMisura = number | 'OL';
@@ -180,6 +184,8 @@ export interface LetturaPol {
   /** Celle lette da una foto (tramite Claude) che il tecnico deve ancora confermare. */
   daVerificare?: { sensori: number[]; moduli: number[] };
   nomeFile?: string;
+  /** Modalità di lettura impostata sul POL-200-TS. */
+  modalita?: 'ADV' | 'CLIP' | 'CLIP&ADV';
   nota: string;
 }
 

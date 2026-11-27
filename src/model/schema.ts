@@ -117,6 +117,7 @@ const letturaSchema = z.object({
   infoFile: z.object({ software: z.string().optional(), database: z.string().optional() }).optional().catch(undefined),
   daVerificare: z.object({ sensori: z.array(z.number()).catch([]), moduli: z.array(z.number()).catch([]) }).optional().catch(undefined),
   nomeFile: z.string().optional(),
+  modalita: z.enum(['ADV', 'CLIP', 'CLIP&ADV']).optional().catch(undefined),
   nota: str,
 });
 
@@ -140,7 +141,7 @@ export const sessioneSchema = z.object({
       z.object({
         id: z.string(),
         ramo: z.enum(['A', 'B', 'loop']),
-        tipo: z.enum(['pT', 'nT', 'cT', 'pC', 'nC', 'pN', 'nP', 'rP', 'rN', 'rC', 'cap', 'vRes', 'vRit', 'vLin']),
+        tipo: z.enum(['pT', 'nT', 'cT', 'pC', 'nC', 'pN', 'nP', 'rP', 'rN', 'rC', 'cap', 'vRes', 'vRit', 'vLin', 'gPN', 'gCP', 'gCN', 'gTP', 'gTN', 'gTC', 'cPN', 'cCP', 'cCN']),
         valore,
         ora: str,
         nota: str,

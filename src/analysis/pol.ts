@@ -142,6 +142,16 @@ export function analizzaLettura(l: LetturaPol, loop: Pick<Loop, 'protocollo'>): 
         riferimenti: iso,
       });
     }
+    if (f === 'sensori' && l.modalita === 'CLIP&ADV' && loop.protocollo !== 'CLIP') {
+      out.push({
+        codice: `POL_MODALITA_${l.ramo}`,
+        gravita: 'bassa',
+        titolo: `Lettura in modalità CLIP&ADV (${dove})`,
+        spiegazione:
+          'La centrale AM-8200N con dispositivi NFX usa il protocollo Advanced: nella modalità mista il POL mostra più spesso «??» e sigle minuscole, che leggendo in ADV spariscono (verificato in cantiere).',
+        doveIntervenire: ['Rifare la lettura con il POL in modalità ADV (Configurazione → protocollo Advanced).'],
+      });
+    }
     const daConf = l.daVerificare?.[f] ?? [];
     if (daConf.length) {
       out.push({
@@ -279,7 +289,26 @@ export function confrontaAB(
         }
       }
     }
-    if (stato === 'parziale') {
+    const nSoloA = confronto.sensori.soloA.length + confronto.moduli.soloA.length;
+    const nSoloB = confronto.sensori.soloB.length + confronto.moduli.soloB.length;
+    if (stato === 'parziale' && nSoloA >= 3 && nSoloB >= 3) {
+      // caso visto in cantiere: ogni lato non raggiunge i dispositivi più lontani, vicini all'altro capo
+      out.push({
+        codice: 'AB_PORTATA',
+        gravita: 'alta',
+        titolo: 'La comunicazione non arriva in fondo al loop da nessuno dei due lati',
+        spiegazione: `Sommando i due lati rispondono tutti, ma dal lato A mancano ${nSoloB} dispositivi (sensori ${intervalli(confronto.sensori.soloB) || '—'}${
+          confronto.moduli.soloB.length ? `; moduli ${intervalli(confronto.moduli.soloB)}` : ''
+        }) e dal lato B ne mancano ${nSoloA} (sensori ${intervalli(confronto.sensori.soloA) || '—'}${
+          confronto.moduli.soloA.length ? `; moduli ${intervalli(confronto.moduli.soloA)}` : ''
+        }). Non è un'interruzione: il loop è continuo, ma il segnale si esaurisce con la distanza. Tipico di una resistenza in serie (giunzione ossidata, di solito sul +), di perdite tra conduttori e calza o di una linea troppo carica.`,
+        doveIntervenire: [
+          'Misurare col POL (Multimetro) la resistenza di +, − e calza: + e − devono essere quasi uguali; misurare anche la V ritorno (≥ 17 V).',
+          'Se il + è più alto del −: aprire a metà, in centrale ponticello A+ con A− (e B+ con B−), misurare + / − di ciascuna metà; la metà con più resistenza contiene la giunzione difettosa. Ripetere dimezzando.',
+          'Eliminare le perdite calza / conduttori, poi rileggere da un solo lato: deve arrivare a tutti i dispositivi.',
+        ],
+      });
+    } else if (stato === 'parziale') {
       const sa = [...confronto.sensori.soloA];
       const sb = [...confronto.sensori.soloB];
       out.push({

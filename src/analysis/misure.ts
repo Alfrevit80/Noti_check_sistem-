@@ -7,7 +7,7 @@ export interface DefMisura {
   tipo: TipoMisura;
   etichetta: string; // breve, per le tabelle
   descrizione: string; // per la procedura guidata
-  unita: 'MΩ' | 'Ω' | 'V' | 'μF';
+  unita: 'MΩ' | 'kΩ' | 'Ω' | 'V' | 'μF' | 'nF';
   consentiOL: boolean;
   rami: RamoMisura[];
   istruzioni: string;
@@ -79,6 +79,42 @@ export const DEF_MISURE: Record<TipoMisura, DefMisura> = {
     consentiOL: false, rami: ['loop'],
     istruzioni: 'Loop ricollegato e centrale alimentata, nessun punto programmato: la tensione deve essere 24 Vcc.',
   },
+  gPN: {
+    tipo: 'gPN', etichetta: 'POL guasto + / −', descrizione: 'POL Multimetro: guasto Pos.-neg.', unita: 'kΩ',
+    consentiOL: true, rami: ['loop'], istruzioni: 'Valore «Guasto — Pos.- neg.» del Multimetro del POL. «>1000» = OL.',
+  },
+  gCP: {
+    tipo: 'gCP', etichetta: 'POL guasto calza / +', descrizione: 'POL Multimetro: guasto Calza Pos.', unita: 'kΩ',
+    consentiOL: true, rami: ['loop'], istruzioni: 'Valore «Guasto — Calza Pos.». Calza collegata ai morsetti grigi del POL.',
+  },
+  gCN: {
+    tipo: 'gCN', etichetta: 'POL guasto calza / −', descrizione: 'POL Multimetro: guasto Calza Neg.', unita: 'kΩ',
+    consentiOL: true, rami: ['loop'], istruzioni: 'Valore «Guasto — Calza Neg.».',
+  },
+  gTP: {
+    tipo: 'gTP', etichetta: 'POL guasto terra +', descrizione: 'POL Multimetro: guasto terra del positivo', unita: 'kΩ',
+    consentiOL: true, rami: ['loop'], istruzioni: 'Colonna «Guasto Terra», riga Positivo (tasto terra; filo di terra collegato al POL).',
+  },
+  gTN: {
+    tipo: 'gTN', etichetta: 'POL guasto terra −', descrizione: 'POL Multimetro: guasto terra del negativo', unita: 'kΩ',
+    consentiOL: true, rami: ['loop'], istruzioni: 'Colonna «Guasto Terra», riga Negativo.',
+  },
+  gTC: {
+    tipo: 'gTC', etichetta: 'POL guasto terra calza', descrizione: 'POL Multimetro: guasto terra della calza', unita: 'kΩ',
+    consentiOL: true, rami: ['loop'], istruzioni: 'Colonna «Guasto Terra», riga Calza.',
+  },
+  cPN: {
+    tipo: 'cPN', etichetta: 'POL capacità + / −', descrizione: 'POL Multimetro: capacità Pos.-neg.', unita: 'nF',
+    consentiOL: true, rami: ['loop'], istruzioni: 'Colonna «Capacità», riga Pos.- neg. (tasto nF).',
+  },
+  cCP: {
+    tipo: 'cCP', etichetta: 'POL capacità calza / +', descrizione: 'POL Multimetro: capacità Calza Pos.', unita: 'nF',
+    consentiOL: true, rami: ['loop'], istruzioni: 'Colonna «Capacità», riga Calza Pos.',
+  },
+  cCN: {
+    tipo: 'cCN', etichetta: 'POL capacità calza / −', descrizione: 'POL Multimetro: capacità Calza Neg.', unita: 'nF',
+    consentiOL: true, rami: ['loop'], istruzioni: 'Colonna «Capacità», riga Calza Neg.',
+  },
   vRit: {
     tipo: 'vRit', etichetta: 'Tensione di ritorno (POL)', descrizione: 'Tensione di ritorno letta sul POL-200-TS', unita: 'V',
     consentiOL: false, rami: ['loop'],
@@ -88,6 +124,7 @@ export const DEF_MISURE: Record<TipoMisura, DefMisura> = {
 
 export const TIPI_ISOLAMENTO: TipoMisura[] = ['pT', 'nT', 'cT', 'pC', 'nC'];
 export const TIPI_LINEA: TipoMisura[] = ['pN', 'nP'];
+export const TIPI_POL: TipoMisura[] = ['gPN', 'gCP', 'gCN', 'gTP', 'gTN', 'gTC', 'cPN', 'cCP', 'cCN'];
 export const TIPI_OHM: TipoMisura[] = ['pT', 'nT', 'cT', 'pC', 'nC', 'pN', 'nP', 'rP', 'rN', 'rC'];
 
 /** Ultima misura registrata (per ora) di un tipo su un ramo. */

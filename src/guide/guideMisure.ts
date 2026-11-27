@@ -42,7 +42,28 @@ const isolamento = (a: string, b: string, extra: Consiglio[] = []): GuidaMisura 
 
 const TERRA = 'la barra di terra della centrale (morsettiera di terra)';
 
+const multimetroPol = (riga: string, atteso: (s: Soglie) => string, extra: Consiglio[] = []): GuidaMisura => ({
+  strumento: 'POL-200-TS, funzione Multimetro',
+  preparazione: [
+    pol('Loop scollegato dalla centrale e centrale spenta; ramo A a destra («Uscita loop»), ramo B a sinistra («Ritorno»).'),
+    prat('Collegare anche le due calze ai morsetti grigi e il filo di terra: senza, le misure di calza e terra non sono valide.'),
+    pol('Batteria del POL carica.'),
+  ],
+  esecuzione: [prat(`Leggere la riga «${riga}». Se il display mostra «>1000» (o «>150 Ohm») registrare OL.`), ...extra],
+  atteso,
+  errori: [prat('Valori «----»: la misura non è stata eseguita; premere il tasto della colonna (Ω, μH, nF, terra).')],
+});
+
 export const GUIDE_MISURE: Record<TipoMisura, GuidaMisura> = {
+  gPN: multimetroPol('Guasto — Pos.- neg.', () => 'Il più alto possibile. Pochi kΩ indicano una perdita tra i conduttori (con i dispositivi collegati, confrontare con un loop sano).'),
+  gCP: multimetroPol('Guasto — Calza Pos.', () => '>1000 kΩ (OL). Un valore misurabile è un contatto tra calza e positivo.'),
+  gCN: multimetroPol('Guasto — Calza Neg.', () => '>1000 kΩ (OL). Un valore misurabile è un contatto tra calza e negativo.'),
+  gTP: multimetroPol('Guasto Terra — Positivo', () => '>1000 kΩ (OL).', [prat('Premere il tasto con il simbolo di terra.')]),
+  gTN: multimetroPol('Guasto Terra — Negativo', () => '>1000 kΩ (OL).'),
+  gTC: multimetroPol('Guasto Terra — Calza', () => '>1000 kΩ (OL).'),
+  cPN: multimetroPol('Capacità — Pos.- neg.', (s) => `Cavo entro ${s.capacitaMaxUF * 1000} nF (manuale); con i dispositivi collegati il valore cresce.`, [prat('Premere il tasto nF.')]),
+  cCP: multimetroPol('Capacità — Calza Pos.', () => 'Simile alla capacità calza / −: i due conduttori sono lunghi uguali.'),
+  cCN: multimetroPol('Capacità — Calza Neg.', () => 'Simile alla capacità calza / +.'),
   vRes: {
     strumento: 'Multimetro digitale in Vcc (scala automatica o 200 V)',
     preparazione: [SCOLLEGATO, am('Verificare l\'assenza di tensione sul canale A e sul canale B prima di ogni misura in Ω.')],

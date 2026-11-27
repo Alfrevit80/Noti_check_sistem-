@@ -172,3 +172,65 @@ export function leggiRispostaGriglia(testo: string, famigliaPredefinita: Famigli
     }
   }
 }
+
+// ───────── Schermata Multimetro del POL letta da una foto ─────────
+
+/** Richiesta da inviare a Claude con la foto della schermata Multimetro del POL. */
+export function testoLetturaMultimetro(): string {
+  return [
+    'Nella foto c\'è la schermata «Multimetro» dello strumento Notifier POL-200-TS.',
+    'Riporta i valori SOLO in questo formato, una riga per voce, senza altro testo. Scrivi i numeri come appaiono; per i valori fuori scala (es. «>150 Ohm», «>1000 KOhm», «>1000 nF») scrivi OL; per «----» (non misurato) ometti la riga.',
+    '',
+    'RES POSITIVO: 19',
+    'RES NEGATIVO: 9',
+    'RES CALZA: 44',
+    'GUASTO POS-NEG: 9',
+    'GUASTO CALZA POS: 52',
+    'GUASTO CALZA NEG: 272',
+    'TERRA POSITIVO: OL',
+    'TERRA NEGATIVO: OL',
+    'TERRA CALZA: OL',
+    'CAP POS-NEG: OL',
+    'CAP CALZA POS: 14',
+    'CAP CALZA NEG: 71',
+    'V RITORNO: 18,5',
+    '',
+    'Unità: resistenze in Ohm, guasti in KOhm, capacità in nF, tensione in V.',
+  ].join('\n');
+}
+
+const VOCI_MULTIMETRO: [RegExp, import('../model/types').TipoMisura][] = [
+  [/^res\w*\s*pos/i, 'rP'],
+  [/^res\w*\s*neg/i, 'rN'],
+  [/^res\w*\s*calza/i, 'rC'],
+  [/^guasto\s*pos/i, 'gPN'],
+  [/^guasto\s*calza\s*pos/i, 'gCP'],
+  [/^guasto\s*calza\s*neg/i, 'gCN'],
+  [/^terra\s*pos/i, 'gTP'],
+  [/^terra\s*neg/i, 'gTN'],
+  [/^terra\s*calza/i, 'gTC'],
+  [/^cap\w*\s*pos/i, 'cPN'],
+  [/^cap\w*\s*calza\s*pos/i, 'cCP'],
+  [/^cap\w*\s*calza\s*neg/i, 'cCN'],
+  [/^v\.?\s*rit/i, 'vRit'],
+];
+
+/** Legge la risposta di Claude sulla schermata Multimetro. */
+export function leggiRispostaMultimetro(testo: string): { tipo: import('../model/types').TipoMisura; valore: number | 'OL' }[] {
+  const out: { tipo: import('../model/types').TipoMisura; valore: number | 'OL' }[] = [];
+  for (const grezza of testo.replace(/```/g, '').split(/\r?\n/)) {
+    const m = /^\s*[-*•]?\s*([^:=]+?)\s*[:=]\s*(.+?)\s*$/.exec(grezza);
+    if (!m) continue;
+    const voce = m[1].replace(/[.-]/g, ' ').replace(/\s+/g, ' ').trim();
+    // le voci più specifiche (calza pos/neg) vanno controllate prima di quelle generiche
+    const def = [...VOCI_MULTIMETRO].sort((a, b) => b[0].source.length - a[0].source.length).find(([r]) => r.test(voce));
+    if (!def) continue;
+    const v = m[2].trim();
+    if (/^(OL|>)/i.test(v)) out.push({ tipo: def[1], valore: 'OL' });
+    else {
+      const n = Number(v.replace(/[^\d,.-]/g, '').replace(',', '.'));
+      if (Number.isFinite(n) && /\d/.test(v)) out.push({ tipo: def[1], valore: n });
+    }
+  }
+  return out.filter((x, i, a) => a.findIndex((y) => y.tipo === x.tipo) === i);
+}
